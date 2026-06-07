@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ivan Luo | Contact</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="weather-config.js"></script>
+    <script src="effects.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body data-page="contact">
+    <div id="ambient-bg" aria-hidden="true">
+      <canvas id="ambient-canvas"></canvas>
+      <div class="ambient-orbs">
+        <span class="ambient-orb ambient-orb-a"></span>
+        <span class="ambient-orb ambient-orb-b"></span>
+        <span class="ambient-orb ambient-orb-c"></span>
+      </div>
+    </div>
+
+    <main class="site-shell">
+      <div class="nav-wrap">
+        <nav id="card-nav" class="top-nav" aria-label="Main Navigation"></nav>
+        <p class="nav-hint">Click a card to reveal the tab, then click again to open.</p>
+      </div>
+
+      <section class="page-hero">
+        <div class="hero-banner">
+          <div class="hero-avatar" aria-hidden="true">IL</div>
+          <div class="hero-copy">
+            <p class="kicker">Let's Connect</p>
+            <h1 class="hero-title">Contact</h1>
+            <p class="hero-bio">
+              Please feel free to reach out to discuss software engineering opportunities, project collaboration, or
+              any ideas you have.
+            </p>
+          </div>
+        </div>
+        <button class="scroll-cue" type="button" aria-label="Scroll to content">↓</button>
+      </section>
+
+      <section class="page-content">
+        <div class="bento-grid">
+          <article class="bento-card span-5 reveal">
+            <div class="panel contact-card" data-tilt>
+              <h2>Reach Out</h2>
+              <a class="contact-link" href="mailto:i2luo@uwaterloo.ca">i2luo@uwaterloo.ca</a>
+              <a class="contact-link" href="tel:+12366887745">236-688-7745</a>
+              <a class="contact-link" href="https://www.linkedin.com/in/ivan-luo2/" target="_blank" rel="noreferrer"
+                >https://www.linkedin.com/in/ivan-luo2/</a
+              >
+              <a class="contact-link" href="https://github.com/i2luo" target="_blank" rel="noreferrer"
+                >https://github.com/i2luo</a
+              >
+            </div>
+          </article>
+
+          <article class="bento-card span-7 reveal">
+            <div class="panel" data-tilt>
+              <h2>Send a Message</h2>
+              <form id="contact-form" class="contact-form">
+                <input required type="text" name="name" placeholder="Your name" />
+                <input required type="email" name="email" placeholder="Your email" />
+                <textarea required name="message" placeholder="How can I help?"></textarea>
+                <button class="btn" type="submit">Open Email Draft</button>
+              </form>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer>Open to internships, software roles, and technical collaborations.</footer>
+    </main>
+  </body>
+</html>

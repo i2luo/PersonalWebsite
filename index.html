@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ivan Luo | Home</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="weather-config.js"></script>
+    <script src="effects.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body data-page="home">
+    <div id="ambient-bg" aria-hidden="true">
+      <canvas id="ambient-canvas"></canvas>
+      <div class="ambient-orbs">
+        <span class="ambient-orb ambient-orb-a"></span>
+        <span class="ambient-orb ambient-orb-b"></span>
+        <span class="ambient-orb ambient-orb-c"></span>
+      </div>
+    </div>
+
+    <main class="site-shell">
+      <div class="nav-wrap">
+        <nav id="card-nav" class="top-nav" aria-label="Main Navigation"></nav>
+        <p class="nav-hint">Click a card to reveal the tab, then click again to open.</p>
+      </div>
+
+      <section class="page-hero">
+        <div class="hero-banner">
+          <div class="hero-avatar" aria-hidden="true">IL</div>
+          <div class="hero-copy">
+            <p class="kicker">Welcome to the table</p>
+            <h1 class="hero-title">Ivan Luo</h1>
+            <p class="hero-bio">
+              
+              Computer Science student at the Univerisity of Waterloo building full-stack software,
+              real-time systems, and machine learning engines. I enjoy building projects of personal
+              interest like a live NHL win predictor and a real-time multiplayer poker platform with 
+              Monte Carlo equity.
+            </p>
+            <div class="tag-list">
+              <span class="pill">Full-Stack Development</span>
+              <span class="pill">Machine Learning</span>
+              <span class="pill">Real-Time Systems</span>
+              <span class="pill">Cloud &amp; DevOps</span>
+            </div>
+          </div>
+        </div>
+        <button class="scroll-cue" type="button" aria-label="Scroll to content">↓</button>
+      </section>
+
+      <section class="page-content">
+        <div class="bento-grid">
+          <article class="bento-card span-6 reveal">
+            <div class="panel" data-tilt>
+              <h2>Technical Stack</h2>
+              <div class="stack-list">
+                <span class="pill">JavaScript</span>
+                <span class="pill">TypeScript</span>
+                <span class="pill">Python</span>
+                <span class="pill">C# / C++</span>
+                <span class="pill">React</span>
+                <span class="pill">Node.js</span>
+                <span class="pill">PostgreSQL</span>
+                <span class="pill">Docker</span>
+                <span class="pill">Jest</span>
+                <span class="pill">TensorFlow</span>
+                <span class="pill">Tailwind CSS</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="bento-card span-6 reveal">
+            <div class="panel" data-tilt>
+              <h2>Education</h2>
+              <p>
+                <strong>University of Waterloo</strong><br />
+                Bachelor of Science in Computer Science, Co-op Program (2023 - 2028)
+              </p>
+              <ul class="list-clean">
+                <li>President's Scholarship of Distinction ($5000)</li>
+                <li>Placed first in BC for the 2021 Euclid Math Contest (team)</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="bento-card span-12 reveal">
+            <div class="panel weather-panel" data-tilt>
+              <h2>Current City Weather</h2>
+              <p class="weather-note">
+                Live city weather from a secure Supabase-backed location updater.
+              </p>
+              <div id="weather-card" class="weather-card" aria-live="polite">
+                <p id="weather-status" class="weather-status">Getting your location...</p>
+                <div id="weather-content" class="weather-content" hidden>
+                  <h3 id="weather-city">City unavailable</h3>
+                  <p class="weather-temp">
+                    <span id="weather-temp">--</span><span class="weather-unit">C</span>
+                  </p>
+                  <p id="weather-desc" class="weather-desc">--</p>
+                  <p class="weather-meta">Feels like: <span id="weather-feels">--</span>C</p>
+                  <p class="weather-meta">Wind: <span id="weather-wind">--</span> km/h</p>
+                  <p class="weather-meta">Updated: <span id="weather-updated">--</span></p>
+                </div>
+              </div>
+            <div class="timezone-card" aria-live="polite">
+              <p class="weather-meta timezone-label">Current Time (Mac Timezone)</p>
+              <p id="timezone-time" class="timezone-time">--:--</p>
+              <p id="timezone-name" class="weather-meta timezone-name">Timezone unavailable</p>
+            </div>
+              <button id="weather-refresh" class="btn weather-btn" type="button">Refresh Weather</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer>Built with motion, glass panels, and a poker-table nod.</footer>
+    </main>
+  </body>
+</html>

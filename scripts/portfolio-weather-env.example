@@ -1,0 +1,9 @@
+# Copy to ~/.portfolio-weather-env and fill in your values.
+# Then run: chmod 600 ~/.portfolio-weather-env
+
+export SUPABASE_URL="https://YOUR-PROJECT.supabase.co"
+export SUPABASE_SERVICE_ROLE_KEY="your-service-role-key-here"
+
+# Optional fallback coordinates for hourly cron (if no GPS location file exists yet).
+export PORTFOLIO_LAT="43.47"
+export PORTFOLIO_LNG="-80.54"

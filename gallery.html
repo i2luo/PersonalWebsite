@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ivan Luo | Gallery</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="weather-config.js"></script>
+    <script src="effects.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body data-page="gallery">
+    <div id="ambient-bg" aria-hidden="true">
+      <canvas id="ambient-canvas"></canvas>
+      <div class="ambient-orbs">
+        <span class="ambient-orb ambient-orb-a"></span>
+        <span class="ambient-orb ambient-orb-b"></span>
+        <span class="ambient-orb ambient-orb-c"></span>
+      </div>
+    </div>
+
+    <main class="site-shell">
+      <div class="nav-wrap">
+        <nav id="card-nav" class="top-nav" aria-label="Main Navigation"></nav>
+        <p class="nav-hint">Click a card to reveal the tab, then click again to open.</p>
+      </div>
+
+      <section class="page-hero">
+        <div class="hero-banner">
+          <div class="hero-avatar" aria-hidden="true">IL</div>
+          <div class="hero-copy">
+            <p class="kicker">Interactive Space</p>
+            <h1 class="hero-title">Gallery</h1>
+            <p class="hero-bio">
+              A community sticky wall where you can share your thoughts, from inspiration to sorrow:
+              all just a touch away.
+            </p>
+          </div>
+        </div>
+        <button class="scroll-cue" type="button" aria-label="Scroll to content">↓</button>
+      </section>
+
+      <section class="page-content">
+        <div class="bento-grid section-gap">
+          <article class="bento-card span-12 reveal">
+            <div class="panel" data-tilt="half">
+              <section class="sticky-wall" aria-labelledby="sticky-wall-heading">
+                <div class="sticky-board-wrap">
+                  <h2 id="sticky-wall-heading">Community Sticky Wall</h2>
+                  <p class="sticky-board-note">
+                    Drop a short note for other visitors. New notes sync automatically every few
+                    seconds.
+                  </p>
+                  <div
+                    id="sticky-board-status"
+                    class="sticky-board-status"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    Loading notes...
+                  </div>
+                  <div id="sticky-board" class="sticky-board" aria-live="polite"></div>
+                </div>
+
+                <aside class="sticky-panel">
+                  <h3>Add a Sticky Note</h3>
+                  <p class="sticky-panel-copy">
+                    Keep it friendly and under 220 characters. Pick colors and patterns, then drag
+                    your note after posting.
+                  </p>
+                  <form id="sticky-note-form" class="sticky-form">
+                    <label for="sticky-note-name">Name (optional)</label>
+                    <input
+                      id="sticky-note-name"
+                      name="author"
+                      type="text"
+                      maxlength="32"
+                      autocomplete="nickname"
+                      placeholder="Anonymous visitor"
+                    />
+
+                    <label for="sticky-note-text">Note</label>
+                    <textarea
+                      id="sticky-note-text"
+                      name="content"
+                      maxlength="220"
+                      required
+                      placeholder="Share an idea, hello, or feedback..."
+                    ></textarea>
+
+                    <label for="sticky-note-color">Note color</label>
+                    <div class="sticky-color-row">
+                      <input
+                        id="sticky-note-color"
+                        name="color"
+                        type="color"
+                        value="#fff59f"
+                        aria-label="Pick a sticky note color"
+                      />
+                      <div class="sticky-color-swatches" role="group" aria-label="Note color presets">
+                        <button type="button" class="sticky-swatch" data-color="#fff59f" style="--swatch: #fff59f" aria-label="Yellow"></button>
+                        <button type="button" class="sticky-swatch" data-color="#81d4fa" style="--swatch: #81d4fa" aria-label="Blue"></button>
+                        <button type="button" class="sticky-swatch" data-color="#f3a9be" style="--swatch: #f3a9be" aria-label="Pink"></button>
+                        <button type="button" class="sticky-swatch" data-color="#98edc1" style="--swatch: #98edc1" aria-label="Mint"></button>
+                        <button type="button" class="sticky-swatch" data-color="#ffcc80" style="--swatch: #ffcc80" aria-label="Peach"></button>
+                        <button type="button" class="sticky-swatch" data-color="#ce93d8" style="--swatch: #ce93d8" aria-label="Lavender"></button>
+                      </div>
+                    </div>
+
+                    <label for="sticky-note-pattern">Note decoration</label>
+                    <div class="sticky-theme-grid" role="group" aria-label="Note decoration options">
+                      <button type="button" class="sticky-theme-option is-active" data-note-pattern="plain" aria-pressed="true">
+                        <span class="sticky-theme-preview sticky-theme-preview-note sticky-theme-preview-plain"></span>
+                        Plain
+                      </button>
+                      <button type="button" class="sticky-theme-option" data-note-pattern="flowers" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-note sticky-theme-preview-flowers"></span>
+                        Flowers
+                      </button>
+                      <button type="button" class="sticky-theme-option" data-note-pattern="stars" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-note sticky-theme-preview-stars"></span>
+                        Stars
+                      </button>
+                      <button type="button" class="sticky-theme-option" data-note-pattern="dots" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-note sticky-theme-preview-dots"></span>
+                        Dots
+                      </button>
+                      <button type="button" class="sticky-theme-option" data-note-pattern="stripes" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-note sticky-theme-preview-stripes"></span>
+                        Stripes
+                      </button>
+                      <button type="button" class="sticky-theme-option" data-note-pattern="hearts" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-note sticky-theme-preview-hearts"></span>
+                        Hearts
+                      </button>
+                    </div>
+                    <input id="sticky-note-pattern" name="pattern" type="hidden" value="plain" />
+
+                    <label>Wall decoration</label>
+                    <div class="sticky-theme-grid" role="group" aria-label="Wall decoration options">
+                      <button type="button" class="sticky-theme-option sticky-theme-board is-active" data-board-theme="grid" aria-pressed="true">
+                        <span class="sticky-theme-preview sticky-theme-preview-board sticky-theme-preview-grid"></span>
+                        Grid
+                      </button>
+                      <button type="button" class="sticky-theme-option sticky-theme-board" data-board-theme="flowers" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-board sticky-theme-preview-flowers"></span>
+                        Flowers
+                      </button>
+                      <button type="button" class="sticky-theme-option sticky-theme-board" data-board-theme="stars" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-board sticky-theme-preview-stars"></span>
+                        Stars
+                      </button>
+                      <button type="button" class="sticky-theme-option sticky-theme-board" data-board-theme="dots" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-board sticky-theme-preview-dots"></span>
+                        Dots
+                      </button>
+                      <button type="button" class="sticky-theme-option sticky-theme-board" data-board-theme="cork" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-board sticky-theme-preview-cork"></span>
+                        Cork
+                      </button>
+                      <button type="button" class="sticky-theme-option sticky-theme-board" data-board-theme="waves" aria-pressed="false">
+                        <span class="sticky-theme-preview sticky-theme-preview-board sticky-theme-preview-waves"></span>
+                        Waves
+                      </button>
+                    </div>
+
+                    <button type="submit" class="btn">Post Note</button>
+                  </form>
+                </aside>
+              </section>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer>Notes sync automatically, refresh anytime to see the latest.</footer>
+    </main>
+  </body>
+</html>

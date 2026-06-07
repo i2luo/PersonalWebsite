@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ivan Luo | Projects</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="weather-config.js"></script>
+    <script src="effects.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body data-page="projects">
+    <div id="ambient-bg" aria-hidden="true">
+      <canvas id="ambient-canvas"></canvas>
+      <div class="ambient-orbs">
+        <span class="ambient-orb ambient-orb-a"></span>
+        <span class="ambient-orb ambient-orb-b"></span>
+        <span class="ambient-orb ambient-orb-c"></span>
+      </div>
+    </div>
+
+    <main class="site-shell">
+      <div class="nav-wrap">
+        <nav id="card-nav" class="top-nav" aria-label="Main Navigation"></nav>
+        <p class="nav-hint">Click a card to reveal the tab, then click again to open.</p>
+      </div>
+
+      <section class="page-hero">
+        <div class="hero-banner">
+          <div class="hero-avatar" aria-hidden="true">IL</div>
+          <div class="hero-copy">
+            <p class="kicker">Featured Hands</p>
+            <h1 class="hero-title">Projects</h1>
+            <p class="hero-bio">
+              Builds that highlight data-intensive systems, real-time architecture, and product-level
+              polish.
+            </p>
+          </div>
+        </div>
+        <button class="scroll-cue" type="button" aria-label="Scroll to content">↓</button>
+      </section>
+
+      <section class="page-content">
+        <div class="bento-grid">
+          <article class="bento-card span-6 reveal">
+            <div class="project-card" data-tilt>
+              <h2>NHL Score Predictor</h2>
+              <p>
+                End-to-end NHL prediction platform combining web scraping, machine learning, and live
+                game APIs to estimate win probabilities for teams in real time.
+              </p>
+              <ul class="list-clean">
+                <li>Dual-model XGBoost pipeline for goals regression and win classification.</li>
+                <li>Automated updates for live injury feeds and game status changes.</li>
+                <li>Performance validation framework for measurable model accuracy.</li>
+              </ul>
+              <div class="tag-list">
+                <span class="pill">Python</span>
+                <span class="pill">TypeScript</span>
+                <span class="pill">Next.js</span>
+                <span class="pill">XGBoost</span>
+                <span class="pill">Pandas</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="bento-card span-6 reveal">
+            <div class="project-card" data-tilt>
+              <h2>Poker WYN</h2>
+              <p>
+                Real-time multiplayer poker platform built with low-latency synchronization, strategic
+                modeling, and production-ready deployment workflows.
+              </p>
+              <ul class="list-clean">
+                <li>Socket.IO server that keeps concurrent clients in sync with game state updates.</li>
+                <li>Containerized deployment on Render with CI/CD from GitHub.</li>
+                <li>
+                  Monte Carlo equity engine powering game-theory-oriented bot decisions and live player
+                  feedback.
+                </li>
+              </ul>
+              <div class="tag-list">
+                <span class="pill">Node.js</span>
+                <span class="pill">Socket.IO</span>
+                <span class="pill">React</span>
+                <span class="pill">Docker</span>
+                <span class="pill">Jest</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer>Projects where probability, performance, and UX come together.</footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,2 @@
+window.PORTFOLIO_SUPABASE_URL = "https://pxrqwhjlqkthqculjewm.supabase.co";
+window.PORTFOLIO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4cnF3aGpscWt0aHFjdWxqZXdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMzM5OTAsImV4cCI6MjA5NDcwOTk5MH0.TDXYHzKvOWy_ig9_K_DEj2-olUZOHAgS-mmVM4cQMQU";
