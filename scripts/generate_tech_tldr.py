@@ -90,6 +90,18 @@ def http_post_json(url: str, payload: dict, headers: dict) -> dict:
         return json.loads(body) if body else {}
 
 
+def normalize_supabase_url(url: str) -> str:
+    """Return the project base URL, tolerating a trailing slash or /rest/v1.
+
+    Storage and REST paths are appended by this script, so the env value must be
+    the bare project URL (e.g. https://xxxx.supabase.co).
+    """
+    cleaned = url.strip().rstrip("/")
+    if cleaned.lower().endswith("/rest/v1"):
+        cleaned = cleaned[: -len("/rest/v1")]
+    return cleaned.rstrip("/")
+
+
 def load_personas() -> list[dict]:
     raw = os.environ.get("TECH_TLDR_PERSONAS", "").strip()
     if not raw:
@@ -258,7 +270,7 @@ def main() -> int:
         print("Weekend detected; skipping generation to save the character budget.")
         return 0
 
-    supabase_url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    supabase_url = normalize_supabase_url(os.environ.get("SUPABASE_URL", ""))
     service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
     gemini_key = os.environ.get("GEMINI_API_KEY", "")
     elevenlabs_key = os.environ.get("ELEVENLABS_API_KEY", "")
