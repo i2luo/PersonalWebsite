@@ -31,6 +31,7 @@ import json
 import os
 import random
 import sys
+import time
 from datetime import datetime, timezone
 from urllib import error, request
 
@@ -148,11 +149,25 @@ def generate_summary(title: str, url: str, persona: str, gemini_key: str) -> str
             "thinkingConfig": {"thinkingBudget": 0},
         },
     }
-    data = http_post_json(
-        f"{GEMINI_ENDPOINT}?key={gemini_key}",
-        payload,
-        headers={},
-    )
+
+    # Gemini's free tier returns transient 503/429s under load; retry briefly.
+    url = f"{GEMINI_ENDPOINT}?key={gemini_key}"
+    attempts = 4
+    for attempt in range(1, attempts + 1):
+        try:
+            data = http_post_json(url, payload, headers={})
+            break
+        except error.HTTPError as exc:
+            if exc.code in (429, 500, 503) and attempt < attempts:
+                wait = 2 ** attempt
+                print(
+                    f"Gemini returned {exc.code}; retrying in {wait}s "
+                    f"(attempt {attempt}/{attempts - 1}).",
+                    file=sys.stderr,
+                )
+                time.sleep(wait)
+                continue
+            raise
     try:
         text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
     except (KeyError, IndexError, TypeError) as exc:
