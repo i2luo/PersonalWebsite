@@ -52,8 +52,41 @@
 
       <section class="page-content">
         <div class="bento-grid">
+          <article class="bento-card span-12 reveal">
+            <div class="panel tldr-panel">
+              <div class="tldr-head">
+                <h2>Today's Tech TL;DR</h2>
+                <p class="tldr-note">
+                  One top Hacker News story each weekday, summarized and narrated in the
+                  voice of a random celebrity persona.
+                </p>
+              </div>
+              <div id="tldr-card" class="tldr-card" aria-live="polite">
+                <p id="tldr-status" class="tldr-status">Loading today's story...</p>
+                <div id="tldr-content" class="tldr-content" hidden>
+                  <p class="tldr-meta">
+                    <span id="tldr-date" class="tldr-date">--</span>
+                    <span class="tldr-persona-tag">As told by <strong id="tldr-persona">--</strong></span>
+                  </p>
+                  <h3 id="tldr-headline" class="tldr-headline">--</h3>
+                  <p id="tldr-summary" class="tldr-summary">--</p>
+                  <div class="tldr-actions">
+                    <button id="tldr-play" class="btn tldr-play-btn" type="button">
+                      <span class="tldr-play-icon" aria-hidden="true">►</span>
+                      <span id="tldr-play-label">Hear it</span>
+                    </button>
+                    <a id="tldr-source" class="tldr-source-link" href="#" target="_blank" rel="noopener">
+                      Read on Hacker News →
+                    </a>
+                  </div>
+                  <audio id="tldr-audio" preload="none"></audio>
+                </div>
+              </div>
+            </div>
+          </article>
+
           <article class="bento-card span-6 reveal">
-            <div class="panel" data-tilt>
+            <div class="panel">
               <h2>Technical Stack</h2>
               <div class="stack-list">
                 <span class="pill">JavaScript</span>
@@ -72,7 +105,7 @@
           </article>
 
           <article class="bento-card span-6 reveal">
-            <div class="panel" data-tilt>
+            <div class="panel">
               <h2>Education</h2>
               <p>
                 <strong>University of Waterloo</strong><br />
@@ -86,7 +119,7 @@
           </article>
 
           <article class="bento-card span-12 reveal">
-            <div class="panel weather-panel" data-tilt>
+            <div class="panel weather-panel">
               <h2>Current City Weather</h2>
               <p class="weather-note">
                 Live city weather from a secure Supabase-backed location updater.

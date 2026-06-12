@@ -365,6 +365,7 @@ const SUPABASE_ANON_KEY =
   "YOUR-SUPABASE-ANON-KEY";
 const SUPABASE_WEATHER_TABLE = "portfolio_weather_current";
 const SUPABASE_STICKY_NOTES_TABLE = "portfolio_gallery_notes";
+const SUPABASE_TECH_TLDR_TABLE = "portfolio_tech_tldr";
 const MAX_STICKY_NOTES = 60;
 const STICKY_REFRESH_MS = 12000;
 const STICKY_LEGACY_COLORS = new Set(["yellow", "blue", "pink", "mint"]);
@@ -609,6 +610,185 @@ function initWeatherWidget() {
 }
 
 initWeatherWidget();
+
+function selectTechTldrElements() {
+  return {
+    card: document.querySelector("#tldr-card"),
+    status: document.querySelector("#tldr-status"),
+    content: document.querySelector("#tldr-content"),
+    date: document.querySelector("#tldr-date"),
+    persona: document.querySelector("#tldr-persona"),
+    headline: document.querySelector("#tldr-headline"),
+    summary: document.querySelector("#tldr-summary"),
+    play: document.querySelector("#tldr-play"),
+    playIcon: document.querySelector(".tldr-play-icon"),
+    playLabel: document.querySelector("#tldr-play-label"),
+    source: document.querySelector("#tldr-source"),
+    audio: document.querySelector("#tldr-audio"),
+  };
+}
+
+function setTechTldrStatus(elements, message, isError = false) {
+  if (!elements.status) {
+    return;
+  }
+  elements.status.textContent = message;
+  elements.status.hidden = false;
+  elements.status.classList.toggle("is-error", isError);
+}
+
+function getTechTldrRecordUrl() {
+  const columns = "story_date,headline,persona,summary,audio_url,source_url";
+  const query = `select=${columns}&order=story_date.desc&limit=1`;
+  const baseUrl = normalizeSupabaseUrl(SUPABASE_URL);
+  return `${baseUrl}/rest/v1/${SUPABASE_TECH_TLDR_TABLE}?${query}`;
+}
+
+function formatTechTldrDate(dateString) {
+  if (!dateString) {
+    return "";
+  }
+  const parsed = new Date(`${dateString}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return dateString;
+  }
+  return parsed.toLocaleDateString([], {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function bindTechTldrAudio(elements) {
+  if (!elements.play || !elements.audio || elements.play.dataset.bound === "true") {
+    return;
+  }
+  elements.play.dataset.bound = "true";
+
+  const setButton = (icon, label) => {
+    if (elements.playIcon) {
+      elements.playIcon.textContent = icon;
+    }
+    if (elements.playLabel) {
+      elements.playLabel.textContent = label;
+    }
+  };
+
+  elements.play.addEventListener("click", () => {
+    if (!elements.audio.src) {
+      return;
+    }
+    if (elements.audio.paused) {
+      elements.audio.play().catch(() => {
+        setTechTldrStatus(elements, "Audio could not be played in this browser.", true);
+      });
+    } else {
+      elements.audio.pause();
+    }
+  });
+
+  elements.audio.addEventListener("play", () => {
+    elements.play.classList.add("is-playing");
+    setButton("❚❚", "Pause");
+  });
+  elements.audio.addEventListener("pause", () => {
+    elements.play.classList.remove("is-playing");
+    setButton("►", elements.play.dataset.idleLabel || "Hear it");
+  });
+  elements.audio.addEventListener("ended", () => {
+    elements.play.classList.remove("is-playing");
+    setButton("►", "Replay");
+  });
+}
+
+function renderTechTldr(elements, record) {
+  if (elements.date) {
+    elements.date.textContent = formatTechTldrDate(record.story_date);
+  }
+  if (elements.persona) {
+    elements.persona.textContent = record.persona || "a mystery voice";
+  }
+  if (elements.headline) {
+    elements.headline.textContent = record.headline || "Untitled story";
+  }
+  if (elements.summary) {
+    elements.summary.textContent = record.summary || "";
+  }
+  if (elements.source) {
+    if (record.source_url) {
+      elements.source.href = record.source_url;
+      elements.source.hidden = false;
+    } else {
+      elements.source.hidden = true;
+    }
+  }
+  if (elements.play) {
+    const firstName = (record.persona || "").split(" ")[0];
+    const idleLabel = firstName ? `Hear ${firstName}` : "Hear it";
+    elements.play.dataset.idleLabel = idleLabel;
+    if (elements.playLabel) {
+      elements.playLabel.textContent = idleLabel;
+    }
+    elements.play.disabled = !record.audio_url;
+  }
+  if (elements.audio) {
+    elements.audio.src = record.audio_url || "";
+  }
+
+  if (elements.status) {
+    elements.status.hidden = true;
+  }
+  if (elements.content) {
+    elements.content.hidden = false;
+  }
+}
+
+async function loadTechTldr(elements) {
+  if (!elements.card || !elements.status || !elements.content) {
+    return;
+  }
+
+  if (!supabaseConfigured()) {
+    setTechTldrStatus(
+      elements,
+      "Tech TL;DR is not configured yet. Add your Supabase URL and anon key in weather-config.js.",
+      true
+    );
+    return;
+  }
+
+  setTechTldrStatus(elements, "Loading today's story...");
+
+  try {
+    const rows = await fetchJson(getTechTldrRecordUrl());
+    const record = Array.isArray(rows) ? rows[0] : null;
+    if (!record) {
+      setTechTldrStatus(
+        elements,
+        "No tech story yet. Check back on a weekday once the daily digest runs."
+      );
+      return;
+    }
+    renderTechTldr(elements, record);
+  } catch {
+    setTechTldrStatus(
+      elements,
+      "Could not load today's tech story. Please try again later.",
+      true
+    );
+  }
+}
+
+function initTechTldr() {
+  const elements = selectTechTldrElements();
+  if (!elements.card) {
+    return;
+  }
+  bindTechTldrAudio(elements);
+  loadTechTldr(elements);
+}
+
+initTechTldr();
 
 function selectStickyElements() {
   return {
