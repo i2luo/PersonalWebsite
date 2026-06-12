@@ -1,5 +1,6 @@
 const pageKey = document.body.dataset.page;
 const LOCAL_QUOTE_PROXY = "/api/daily-quote";
+const PUBLIC_QUOTE_API = "https://dummyjson.com/quotes";
 const tabConfig = [
   { page: "home", label: "Home", href: "index.html" },
   { page: "experience", label: "Experience", href: "experience.html" },
@@ -52,6 +53,51 @@ async function fetchDailyQuoteFromUrl(url, options = {}) {
   return parseDailyQuotePayload(payload);
 }
 
+function getDailyQuoteSeed(dateString) {
+  let hash = 0;
+  for (let index = 0; index < dateString.length; index += 1) {
+    hash = (Math.imul(31, hash) + dateString.charCodeAt(index)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+async function fetchDailyQuoteFromPublicApi() {
+  const today = new Date().toISOString().slice(0, 10);
+  const seed = getDailyQuoteSeed(today);
+
+  const metaResponse = await fetch(`${PUBLIC_QUOTE_API}?limit=1&skip=0`, {
+    cache: "no-store",
+  });
+  if (!metaResponse.ok) {
+    throw new Error(`Public quote API failed (${metaResponse.status})`);
+  }
+
+  const metaPayload = await metaResponse.json();
+  const total = Number(metaPayload?.total) || 1;
+  const skip = seed % total;
+
+  const quoteResponse = await fetch(`${PUBLIC_QUOTE_API}?limit=1&skip=${skip}`, {
+    cache: "no-store",
+  });
+  if (!quoteResponse.ok) {
+    throw new Error(`Public quote API failed (${quoteResponse.status})`);
+  }
+
+  const quotePayload = await quoteResponse.json();
+  const quote = Array.isArray(quotePayload?.quotes) ? quotePayload.quotes[0] : null;
+  const text = (quote?.quote || "").toString().trim();
+  const author = (quote?.author || "").toString().trim();
+
+  if (!text) {
+    throw new Error("Public quote API returned an empty quote.");
+  }
+
+  return {
+    text,
+    author: author || "Unknown",
+  };
+}
+
 async function fetchDailyQuote() {
   const errors = [];
 
@@ -73,6 +119,12 @@ async function fetchDailyQuote() {
     return await fetchDailyQuoteFromUrl(LOCAL_QUOTE_PROXY);
   } catch (error) {
     errors.push(`Local quote proxy: ${error.message}`);
+  }
+
+  try {
+    return await fetchDailyQuoteFromPublicApi();
+  } catch (error) {
+    errors.push(`Public quote API: ${error.message}`);
   }
 
   throw new Error(errors.join(" | "));

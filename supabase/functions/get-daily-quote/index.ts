@@ -19,7 +19,10 @@ Deno.serve(async (req) => {
 
   try {
     const upstream = await fetch(ZENQUOTES_TODAY, {
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "PortfolioDailyQuote/1.0",
+      },
     });
 
     if (!upstream.ok) {
