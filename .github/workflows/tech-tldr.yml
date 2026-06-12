@@ -1,0 +1,46 @@
+name: Daily Tech TL;DR
+
+on:
+  schedule:
+    # 13:00 UTC (~9am ET), Monday through Friday only.
+    - cron: "0 13 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Run even if it is the weekend"
+        type: boolean
+        default: false
+      skip_tts:
+        description: "Test everything except ElevenLabs (no characters spent)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: tech-tldr
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate Daily Tech TL;DR
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          # Optional: JSON array of {"name","voice_id"} to override built-in personas.
+          TECH_TLDR_PERSONAS: ${{ secrets.TECH_TLDR_PERSONAS }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
+          if [ "${{ inputs.skip_tts }}" = "true" ]; then ARGS="$ARGS --skip-tts"; fi
+          python3 scripts/generate_tech_tldr.py $ARGS
