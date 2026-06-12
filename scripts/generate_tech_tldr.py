@@ -128,7 +128,13 @@ def generate_summary(title: str, url: str, persona: str, gemini_key: str) -> str
     prompt = SYSTEM_PROMPT.format(persona=persona, title=title, url=url)
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.9, "maxOutputTokens": 200},
+        "generationConfig": {
+            "temperature": 0.9,
+            "maxOutputTokens": 256,
+            # gemini-2.5-flash spends output tokens on hidden "thinking" by
+            # default, which can starve the actual answer. Disable it.
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
     }
     data = http_post_json(
         f"{GEMINI_ENDPOINT}?key={gemini_key}",
@@ -181,6 +187,7 @@ def upload_audio(
         method="POST",
         data=audio,
         headers={
+            "apikey": service_key,
             "Authorization": f"Bearer {service_key}",
             "Content-Type": "audio/mpeg",
             "x-upsert": "true",
@@ -196,7 +203,10 @@ def delete_object(supabase_url: str, bucket: str, object_path: str, service_key:
     req = request.Request(
         f"{supabase_url}/storage/v1/object/{bucket}/{object_path}",
         method="DELETE",
-        headers={"Authorization": f"Bearer {service_key}"},
+        headers={
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}",
+        },
     )
     with request.urlopen(req, timeout=30):
         pass
