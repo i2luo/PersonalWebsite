@@ -45,11 +45,19 @@ ELEVENLABS_TTS = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 
 MAX_SUMMARY_CHARS = 350
 
+# Known-good default voice every free ElevenLabs account can synthesize. Used as
+# the safety net when a persona's voice_id is rejected with HTTP 402 (a premium
+# / Voice Library voice that this plan can't use). A run should never die on
+# voice selection alone, so we always have this to fall back to.
+FALLBACK_VOICE = {"name": "Arnold", "voice_id": "VR6AewLTigWG4xSOukaG"}
+
 # Persona name (drives the Gemini writing style) -> ElevenLabs voice_id.
-# The voice_ids below are real ElevenLabs default voices so the script runs out
-# of the box. For true celebrity narration, replace each voice_id with a matching
-# community voice id from the ElevenLabs Voice Library, or override the whole
-# list via the TECH_TLDR_PERSONAS env var.
+# The voice_ids below are real ElevenLabs default ("premade") voices that free
+# accounts can synthesize, so the script stays at $0 out of the box. To confirm
+# which ids YOUR key can actually use, run:
+#   ELEVENLABS_API_KEY=sk_xxx python3 scripts/list_elevenlabs_voices.py
+# then lock this list (or the TECH_TLDR_PERSONAS env var) to those ids. If any
+# voice still gets rejected with HTTP 402, synthesis falls back to FALLBACK_VOICE.
 DEFAULT_PERSONAS = [
     {"name": "Gordon Ramsay", "voice_id": "VR6AewLTigWG4xSOukaG"},      # Arnold
     {"name": "David Attenborough", "voice_id": "pNInz6obpgDQGcFmaJgB"}, # Adam
@@ -185,24 +193,71 @@ def generate_summary(title: str, url: str, persona: str, gemini_key: str) -> str
 
 
 def synthesize_audio(text: str, voice_id: str, api_key: str) -> bytes:
+    """Synthesize one voice, retrying only transient (429/5xx) failures.
+
+    Raises the HTTPError for any non-transient status (e.g. 402) so the caller
+    can decide whether to fall back to another voice.
+    """
     model_id = os.environ.get("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2")
     payload = {
         "text": text,
         "model_id": model_id,
         "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
     }
-    req = request.Request(
-        ELEVENLABS_TTS.format(voice_id=voice_id),
-        method="POST",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "xi-api-key": api_key,
-            "Content-Type": "application/json",
-            "Accept": "audio/mpeg",
-        },
-    )
-    with request.urlopen(req, timeout=120) as response:
-        return response.read()
+    attempts = 4
+    for attempt in range(1, attempts + 1):
+        req = request.Request(
+            ELEVENLABS_TTS.format(voice_id=voice_id),
+            method="POST",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "xi-api-key": api_key,
+                "Content-Type": "application/json",
+                "Accept": "audio/mpeg",
+            },
+        )
+        try:
+            with request.urlopen(req, timeout=120) as response:
+                return response.read()
+        except error.HTTPError as exc:
+            if exc.code in (429, 500, 502, 503) and attempt < attempts:
+                wait = 2 ** attempt
+                print(
+                    f"ElevenLabs returned {exc.code} for voice {voice_id}; "
+                    f"retrying in {wait}s (attempt {attempt}/{attempts - 1}).",
+                    file=sys.stderr,
+                )
+                time.sleep(wait)
+                continue
+            raise
+    raise RuntimeError("Exhausted ElevenLabs synthesis retries.")
+
+
+def synthesize_with_fallback(
+    text: str, persona: dict, api_key: str
+) -> tuple[bytes, str]:
+    """Try the persona's voice; on HTTP 402 fall back to FALLBACK_VOICE.
+
+    A 402 means the voice isn't usable on this plan (premium / Voice Library).
+    Rather than fail the whole run, we narrate with a known-good default voice.
+    Returns (audio_bytes, voice_name_used) so callers can note the substitution.
+    """
+    voice_id = persona["voice_id"]
+    try:
+        return synthesize_audio(text, voice_id, api_key), persona["name"]
+    except error.HTTPError as exc:
+        if exc.code == 402 and voice_id != FALLBACK_VOICE["voice_id"]:
+            print(
+                f"Voice {voice_id} ({persona['name']}) rejected with HTTP 402 "
+                f"(not usable on this plan); falling back to "
+                f"{FALLBACK_VOICE['name']}.",
+                file=sys.stderr,
+            )
+            audio = synthesize_audio(
+                text, FALLBACK_VOICE["voice_id"], api_key
+            )
+            return audio, FALLBACK_VOICE["name"]
+        raise
 
 
 def upload_audio(
@@ -332,8 +387,11 @@ def main() -> int:
             print("      Cleanup OK (probe object deleted)")
             audio_url = None
         else:
-            audio = synthesize_audio(summary, persona["voice_id"], elevenlabs_key)
-            print(f"[4/5] Synthesized {len(audio)} bytes of audio.")
+            audio, voice_used = synthesize_with_fallback(
+                summary, persona, elevenlabs_key
+            )
+            note = "" if voice_used == persona["name"] else f" (voice: {voice_used})"
+            print(f"[4/5] Synthesized {len(audio)} bytes of audio{note}.")
             object_path = f"top-story-{story_date}.mp3"
             audio_url = upload_audio(supabase_url, bucket, object_path, audio, service_key)
             print(f"      Uploaded audio: {audio_url}")
