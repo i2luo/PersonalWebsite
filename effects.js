@@ -22,6 +22,58 @@
     [107, 159, 212],
     [156, 122, 200],
   ];
+  const MOOD_STORAGE_KEY = "portfolio-mood-v1";
+  const DEFAULT_BG = "#091411";
+  const MOOD_ANIMALS = [
+    { id: "fox", label: "fox", emoji: "🦊", food: "🫐", habitat: "forest", decor: "🌲" },
+    { id: "cat", label: "cat", emoji: "🐱", food: "🐟", habitat: "home", decor: "🧶" },
+    { id: "dog", label: "dog", emoji: "🐶", food: "🦴", habitat: "yard", decor: "🌳" },
+    { id: "panda", label: "panda", emoji: "🐼", food: "🎋", habitat: "bamboo", decor: "🎍" },
+    { id: "penguin", label: "penguin", emoji: "🐧", food: "🐟", habitat: "iceberg", decor: "🧊" },
+    { id: "owl", label: "owl", emoji: "🦉", food: "🐭", habitat: "night", decor: "🌙" },
+    { id: "frog", label: "frog", emoji: "🐸", food: "🪰", habitat: "pond", decor: "🪷" },
+    { id: "bear", label: "bear", emoji: "🐻", food: "🍯", habitat: "woods", decor: "🌲" },
+    { id: "rabbit", label: "rabbit", emoji: "🐰", food: "🥕", habitat: "meadow", decor: "🌼" },
+    { id: "lion", label: "lion", emoji: "🦁", food: "🍖", habitat: "savanna", decor: "🌴" },
+    { id: "koala", label: "koala", emoji: "🐨", food: "🌿", habitat: "eucalyptus", decor: "🌿" },
+    { id: "tiger", label: "tiger", emoji: "🐯", food: "🍖", habitat: "jungle", decor: "🌴" },
+    { id: "turtle", label: "turtle", emoji: "🐢", food: "🥬", habitat: "beach", decor: "🐚" },
+    { id: "whale", label: "whale", emoji: "🐳", food: "🦐", habitat: "ocean", decor: "🌊" },
+  ];
+  const MOOD_COLORS = [
+    { id: "emerald", label: "emerald glow", hex: "#091411" },
+    { id: "crimson", label: "crimson night", hex: "#4d0f1a" },
+    { id: "sunset", label: "sunset orange", hex: "#4a230a" },
+    { id: "gold", label: "golden hour", hex: "#403309" },
+    { id: "forest", label: "deep forest", hex: "#0e2e1a" },
+    { id: "teal", label: "teal lagoon", hex: "#0a2e30" },
+    { id: "ocean", label: "ocean blue", hex: "#0c2336" },
+    { id: "indigo", label: "indigo dusk", hex: "#181445" },
+    { id: "violet", label: "violet haze", hex: "#2a0f3a" },
+    { id: "magenta", label: "magenta bloom", hex: "#3a0d2a" },
+    { id: "slate", label: "slate grey", hex: "#1a2228" },
+  ];
+
+  // Pixel-art image scenes keyed by animal id. Built out one animal at a time.
+  // Each entry pairs a transparent habitat island PNG with a transparent
+  // animal sprite PNG. Animals without an entry fall back to the legacy
+  // emoji island below.
+  const ANIMAL_SCENES = {
+    fox: { island: "assets/animals/island-forest.png", sprite: "assets/animals/fox.png" },
+    cat: { island: "assets/animals/island-home.png", sprite: "assets/animals/cat.png" },
+    dog: { island: "assets/animals/island-yard.png", sprite: "assets/animals/dog.png" },
+    panda: { island: "assets/animals/island-bamboo.png", sprite: "assets/animals/panda.png" },
+    penguin: { island: "assets/animals/island-iceberg.png", sprite: "assets/animals/penguin.png" },
+    owl: { island: "assets/animals/island-night.png", sprite: "assets/animals/owl.png" },
+    frog: { island: "assets/animals/island-pond.png", sprite: "assets/animals/frog.png" },
+    bear: { island: "assets/animals/island-woods.png", sprite: "assets/animals/bear.png" },
+    rabbit: { island: "assets/animals/island-meadow.png", sprite: "assets/animals/rabbit.png" },
+    lion: { island: "assets/animals/island-savanna.png", sprite: "assets/animals/lion.png" },
+    koala: { island: "assets/animals/island-eucalyptus.png", sprite: "assets/animals/koala.png" },
+    tiger: { island: "assets/animals/island-jungle.png", sprite: "assets/animals/tiger.png" },
+    turtle: { island: "assets/animals/island-beach.png", sprite: "assets/animals/turtle.png" },
+    whale: { island: "assets/animals/island-ocean.png", sprite: "assets/animals/whale.png" },
+  };
 
   let scrollMax = 1;
   let pointerX = 0;
@@ -39,6 +91,8 @@
   let beamAngle = 0;
   let rafId = 0;
   let cursorFxRafId = 0;
+  let meshBaseColor = DEFAULT_BG;
+  let animalBehavior = null;
   let cursorFxMode = "glow";
   let cursorFxCanvas = null;
   let cursorFxCtx = null;
@@ -117,7 +171,7 @@
     function draw(now) {
       const t = (now - start) * 0.00015;
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "#091411";
+      ctx.fillStyle = meshBaseColor;
       ctx.fillRect(0, 0, width, height);
 
       palette.forEach((blob, index) => {
@@ -618,6 +672,316 @@
     }
   }
 
+  function readMood() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(MOOD_STORAGE_KEY));
+      if (stored && typeof stored === "object") {
+        return { animal: stored.animal || null, color: stored.color || null };
+      }
+    } catch {
+      // Ignore storage errors.
+    }
+    return { animal: null, color: null };
+  }
+
+  function writeMood(mood) {
+    try {
+      localStorage.setItem(MOOD_STORAGE_KEY, JSON.stringify(mood));
+    } catch {
+      // Ignore storage errors.
+    }
+  }
+
+  function applyMoodColor(colorId) {
+    const color = MOOD_COLORS.find((c) => c.id === colorId);
+    const hex = color ? color.hex : DEFAULT_BG;
+    meshBaseColor = hex;
+    document.documentElement.style.setProperty("--bg-deep", hex);
+  }
+
+  function stopAnimalBehavior() {
+    if (animalBehavior) {
+      animalBehavior.stop();
+      animalBehavior = null;
+    }
+  }
+
+  function startAnimalBehavior(island) {
+    const creature = island.querySelector(".island-creature");
+    const food = island.querySelector(".island-food");
+    if (!creature) {
+      return null;
+    }
+
+    const MIN_X = 16;
+    const MAX_X = 82;
+    const FOOD_X = 74;
+    let pos = 42;
+    let timer = 0;
+    let stopped = false;
+
+    // Pixel-art sprites are drawn facing right; legacy emoji face left.
+    const facesRight = creature.dataset.face === "right";
+
+    creature.style.left = `${pos}%`;
+    creature.style.setProperty("--face", "1");
+
+    const setFacing = (dir) => {
+      const movingLeft = dir < 0;
+      const face = facesRight ? (movingLeft ? -1 : 1) : movingLeft ? 1 : -1;
+      creature.style.setProperty("--face", face);
+    };
+
+    const clearStates = () => {
+      creature.classList.remove("is-walking", "is-eating", "is-sleeping");
+      if (food) {
+        food.classList.remove("is-visible");
+      }
+    };
+
+    const schedule = (fn, ms) => {
+      timer = window.setTimeout(() => {
+        if (!stopped) {
+          fn();
+        }
+      }, ms);
+    };
+
+    const moveTo = (target, onArrive, speed = 38) => {
+      const dir = target < pos ? -1 : 1;
+      setFacing(dir);
+      const distance = Math.abs(target - pos);
+      const duration = Math.max(450, distance * speed);
+      creature.style.transition = `left ${duration}ms linear`;
+      creature.classList.add("is-walking");
+      pos = target;
+      creature.style.left = `${pos}%`;
+      schedule(() => {
+        creature.classList.remove("is-walking");
+        onArrive();
+      }, duration);
+    };
+
+    const idle = () => {
+      clearStates();
+      schedule(nextAction, 1500 + Math.random() * 3000);
+    };
+
+    const walk = () => {
+      clearStates();
+      const target = MIN_X + Math.random() * (MAX_X - MIN_X);
+      moveTo(target, idle);
+    };
+
+    const eat = () => {
+      clearStates();
+      const eatX = FOOD_X - 9;
+      moveTo(eatX, () => {
+        // Always turn to face the food so it sits right at the muzzle/beak.
+        setFacing(1);
+        if (food) {
+          food.style.left = `${eatX + 17}%`;
+        }
+        creature.classList.add("is-eating");
+        if (food) {
+          food.classList.add("is-visible");
+        }
+        schedule(() => {
+          creature.classList.remove("is-eating");
+          if (food) {
+            food.classList.remove("is-visible");
+          }
+          idle();
+        }, 2200 + Math.random() * 1200);
+      });
+    };
+
+    const sleep = () => {
+      clearStates();
+      // Keep a consistent orientation so the lie-down pose and zzz line up.
+      setFacing(1);
+      creature.classList.add("is-sleeping");
+      schedule(() => {
+        creature.classList.remove("is-sleeping");
+        idle();
+      }, 3600 + Math.random() * 3200);
+    };
+
+    function nextAction() {
+      const roll = Math.random();
+      if (roll < 0.52) {
+        walk();
+      } else if (roll < 0.82) {
+        eat();
+      } else {
+        sleep();
+      }
+    }
+
+    if (prefersReducedMotion) {
+      return { stop() {} };
+    }
+
+    idle();
+    return {
+      stop() {
+        stopped = true;
+        if (timer) {
+          window.clearTimeout(timer);
+        }
+      },
+    };
+  }
+
+  function renderAnimalIsland(animalId) {
+    const animal = MOOD_ANIMALS.find((a) => a.id === animalId);
+    const navWrap = document.querySelector(".nav-wrap");
+    let island = document.querySelector(".animal-island");
+
+    stopAnimalBehavior();
+    if (island) {
+      island.remove();
+      island = null;
+    }
+
+    if (!animal || !navWrap) {
+      if (navWrap) {
+        navWrap.classList.remove("has-island");
+      }
+      return;
+    }
+
+    island = document.createElement("div");
+    island.className = "animal-island";
+    island.setAttribute("aria-hidden", "true");
+    island.dataset.habitat = animal.habitat;
+    island.setAttribute("title", `A ${animal.label} in its habitat`);
+
+    const scene = ANIMAL_SCENES[animal.id];
+    if (scene) {
+      // Pixel-art island: transparent images sitting directly in the nav.
+      island.classList.add("animal-island--img");
+      island.innerHTML = `
+        <img class="island-base" src="${scene.island}" alt="" draggable="false">
+        <span class="island-food">${animal.food}</span>
+        <span class="island-creature" data-face="right">
+          <span class="island-zzz">z<sup>z</sup></span>
+          <span class="island-creature-body">
+            <img class="island-creature-sprite" src="${scene.sprite}" alt="" draggable="false">
+          </span>
+        </span>
+      `;
+    } else {
+      // Legacy fallback for animals not yet converted to pixel-art images.
+      island.innerHTML = `
+        <span class="island-decor">${animal.decor}</span>
+        <span class="island-food">${animal.food}</span>
+        <span class="island-creature">
+          <span class="island-zzz">z<sup>z</sup></span>
+          <span class="island-creature-body">
+            <span class="island-creature-emoji">${animal.emoji}</span>
+          </span>
+        </span>
+      `;
+    }
+
+    navWrap.insertBefore(island, navWrap.firstChild);
+    navWrap.classList.add("has-island");
+    animalBehavior = startAnimalBehavior(island);
+  }
+
+  function applyMood(mood) {
+    applyMoodColor(mood.color);
+    renderAnimalIsland(mood.animal);
+  }
+
+  function openMoodModal() {
+    const current = readMood();
+    let modal = document.querySelector(".mood-modal");
+
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.className = "mood-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "Pick today's mood");
+      modal.innerHTML = `
+        <div class="mood-backdrop" data-mood-close></div>
+        <div class="mood-dialog" role="document">
+          <button type="button" class="mood-close" data-mood-close aria-label="Close">×</button>
+          <h2 class="mood-title">Today I feel like a&hellip;</h2>
+          <p class="mood-sentence">
+            Today I feel like a
+            <span class="mood-select-wrap">
+              <select class="mood-select" id="mood-animal" aria-label="Choose an animal">
+                ${MOOD_ANIMALS.map(
+                  (a) => `<option value="${a.id}">${a.emoji} ${a.label}</option>`
+                ).join("")}
+              </select>
+            </span>
+            in the
+            <span class="mood-select-wrap">
+              <select class="mood-select" id="mood-color" aria-label="Choose a color">
+                ${MOOD_COLORS.map(
+                  (c) => `<option value="${c.id}">${c.label}</option>`
+                ).join("")}
+              </select>
+            </span>.
+          </p>
+          <div class="mood-actions">
+            <button type="button" class="mood-btn mood-clear" data-mood-clear>Clear</button>
+            <button type="button" class="mood-btn mood-apply" data-mood-apply>Set my mood</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const close = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("mood-modal-open");
+      };
+
+      modal.querySelectorAll("[data-mood-close]").forEach((el) => {
+        el.addEventListener("click", close);
+      });
+
+      modal.querySelector("[data-mood-apply]").addEventListener("click", () => {
+        const mood = {
+          animal: modal.querySelector("#mood-animal").value,
+          color: modal.querySelector("#mood-color").value,
+        };
+        applyMood(mood);
+        writeMood(mood);
+        close();
+      });
+
+      modal.querySelector("[data-mood-clear]").addEventListener("click", () => {
+        const cleared = { animal: null, color: null };
+        applyMood(cleared);
+        writeMood(cleared);
+        close();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          close();
+        }
+      });
+    }
+
+    const animalSelect = modal.querySelector("#mood-animal");
+    const colorSelect = modal.querySelector("#mood-color");
+    animalSelect.value = current.animal || MOOD_ANIMALS[0].id;
+    colorSelect.value = current.color || MOOD_COLORS[0].id;
+
+    modal.classList.add("is-open");
+    document.body.classList.add("mood-modal-open");
+  }
+
+  function initMood() {
+    applyMood(readMood());
+  }
+
   function initCursorFxPicker() {
     const picker = document.createElement("div");
     picker.className = "cursor-fx-picker";
@@ -638,14 +1002,20 @@
           `
         ).join("")}
       </div>
+      <button type="button" class="cursor-fx-toggle mood-toggle">
+        Today's Mood
+      </button>
       <button type="button" class="cursor-fx-toggle" aria-expanded="false" aria-controls="cursor-fx-menu">
         Cursor FX
       </button>
     `;
 
-    const toggle = picker.querySelector(".cursor-fx-toggle");
+    const toggle = picker.querySelector(".cursor-fx-toggle:not(.mood-toggle)");
+    const moodToggle = picker.querySelector(".mood-toggle");
     const menu = picker.querySelector(".cursor-fx-menu");
     menu.id = "cursor-fx-menu";
+
+    moodToggle.addEventListener("click", openMoodModal);
 
     toggle.addEventListener("click", () => {
       const isOpen = picker.classList.toggle("is-open");
@@ -711,6 +1081,7 @@
     document.body.classList.add("is-static");
   }
 
+  initMood();
   initMeshCanvas();
   initRevealObserver();
   initScrollCue();

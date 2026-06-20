@@ -46,7 +46,8 @@ body {
   overflow-x: hidden;
 }
 
-body.quote-gate-open {
+body.quote-gate-open,
+body.mood-modal-open {
   overflow: hidden;
 }
 
@@ -194,6 +195,9 @@ html.scrolled #ambient-canvas {
 }
 
 .cursor-fx-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
   display: grid;
   gap: 0.35rem;
   min-width: 11.5rem;
@@ -320,6 +324,685 @@ html.scrolled #ambient-canvas {
 
 body.is-static .cursor-fx-picker {
   display: none;
+}
+
+.mood-toggle {
+  border-color: rgba(107, 159, 212, 0.5);
+  background: linear-gradient(135deg, rgba(18, 28, 32, 0.82), rgba(24, 20, 48, 0.8));
+}
+
+.mood-toggle:hover {
+  border-color: rgba(156, 122, 200, 0.7);
+  background: linear-gradient(135deg, rgba(24, 34, 40, 0.9), rgba(34, 28, 60, 0.9));
+}
+
+/* —— Today's Mood modal —— */
+.mood-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 220ms ease,
+    visibility 220ms ease;
+}
+
+.mood-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mood-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 9, 12, 0.66);
+  backdrop-filter: blur(6px);
+}
+
+.mood-dialog {
+  position: relative;
+  width: min(30rem, 100%);
+  padding: 1.9rem 1.6rem 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(141, 195, 166, 0.3);
+  background: var(--panel-strong);
+  box-shadow: var(--shadow);
+  transform: translateY(14px) scale(0.98);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mood-modal.is-open .mood-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.mood-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.85rem;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.mood-close:hover {
+  color: var(--text);
+  background: rgba(159, 168, 177, 0.12);
+}
+
+.mood-title {
+  margin: 0 0 1.1rem;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 400;
+}
+
+.mood-sentence {
+  margin: 0;
+  font-size: 1.18rem;
+  line-height: 2.2;
+  color: var(--text);
+}
+
+.mood-select-wrap {
+  display: inline-block;
+}
+
+.mood-select {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0 0.15rem;
+  padding: 0.35rem 2rem 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(141, 195, 166, 0.45);
+  background-color: rgba(12, 18, 22, 0.85);
+  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.05rem) 55%,
+    calc(100% - 0.7rem) 55%;
+  background-size: 0.36rem 0.36rem, 0.36rem 0.36rem;
+  background-repeat: no-repeat;
+  color: var(--text);
+  font: 600 1.02rem var(--font-sans);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.mood-select:hover,
+.mood-select:focus-visible {
+  border-color: rgba(156, 122, 200, 0.75);
+  background-color: rgba(20, 28, 34, 0.95);
+  outline: none;
+}
+
+.mood-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  margin-top: 1.7rem;
+}
+
+.mood-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font: 600 0.86rem var(--font-sans);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.mood-btn:hover {
+  transform: translateY(-1px);
+}
+
+.mood-clear {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.mood-clear:hover {
+  border-color: rgba(159, 168, 177, 0.5);
+  color: var(--text);
+}
+
+.mood-apply {
+  border: 1px solid rgba(141, 195, 166, 0.6);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #07140f;
+}
+
+.mood-apply:hover {
+  box-shadow: 0 10px 26px rgba(141, 195, 166, 0.3);
+}
+
+/* —— Animal island (lives to the left of the tabs) —— */
+.animal-island {
+  --sky-top: #20364a;
+  --sky-bottom: #2a4a5e;
+  --ground: #3a6b53;
+  --ground-2: #234738;
+  position: relative;
+  grid-area: island;
+  justify-self: start;
+  margin-left: clamp(12px, 2.5vw, 28px);
+  width: clamp(132px, 15vw, 172px);
+  height: 136px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.28);
+  user-select: none;
+}
+
+.animal-island::after {
+  content: "";
+  position: absolute;
+  left: -6%;
+  right: -6%;
+  bottom: 0;
+  height: 38%;
+  background: linear-gradient(180deg, var(--ground), var(--ground-2));
+  border-radius: 46% 46% 0 0 / 60% 60% 0 0;
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.16);
+}
+
+/* Bespoke scenes draw their own ground, so hide the generic curve. */
+.animal-island.has-scene::after,
+.animal-island.animal-island--img::after {
+  display: none;
+}
+
+/* —— Pixel-art image island (transparent, sits directly in the nav) —— */
+.animal-island.animal-island--img {
+  --island-w: clamp(74px, 8vw, 92px);
+  position: relative;
+  grid-area: island;
+  justify-self: start;
+  align-self: center;
+  width: var(--island-w);
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  user-select: none;
+}
+
+.animal-island--img .island-base {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.3));
+}
+
+/* Sprites are registered with feet on the canvas floor, so this surface % is
+   all that's needed to land every animal on the habitat (no floating). The
+   value tracks the front lip of the grass/snow shelf shared by the islands. */
+.animal-island--img .island-creature {
+  position: absolute;
+  left: 42%;
+  bottom: 57%;
+  z-index: 3;
+  transform: translateX(-50%);
+}
+
+/* Food appears right at the muzzle/beak (upper-front) while eating. */
+.animal-island--img .island-food {
+  bottom: 93%;
+  font-size: 0.78rem;
+}
+
+.island-creature-sprite {
+  display: block;
+  height: clamp(26px, 2.8vw, 34px);
+  width: auto;
+  image-rendering: pixelated;
+  -webkit-user-drag: none;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.3));
+  animation: sprite-idle 3.2s ease-in-out infinite;
+}
+
+.island-creature.is-walking .island-creature-sprite {
+  animation: sprite-waddle 0.42s ease-in-out infinite;
+}
+
+.island-creature.is-eating .island-creature-sprite {
+  animation: sprite-peck 0.55s ease-in-out infinite;
+}
+
+.island-creature.is-sleeping .island-creature-sprite {
+  transform-origin: 50% 100%;
+  animation: sprite-sleep 3.8s ease-in-out infinite;
+}
+
+@keyframes sprite-idle {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-1px) scaleY(1.02);
+  }
+}
+
+@keyframes sprite-waddle {
+  0%,
+  100% {
+    transform: rotate(-5deg) translateY(0);
+  }
+  25% {
+    transform: rotate(0deg) translateY(-2px);
+  }
+  50% {
+    transform: rotate(5deg) translateY(0);
+  }
+  75% {
+    transform: rotate(0deg) translateY(-2px);
+  }
+}
+
+@keyframes sprite-peck {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  45% {
+    transform: rotate(12deg) translateY(2px);
+  }
+}
+
+/* Sleep upright: a gentle breathing slump, no tilt, so the animal stays
+   standing rather than lying down. */
+@keyframes sprite-sleep {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(0.5px) scaleY(0.98);
+  }
+}
+
+.island-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.island-scene .scene-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.island-decor {
+  position: absolute;
+  left: 0.5rem;
+  bottom: calc(38% - 0.2rem);
+  font-size: 1.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+  z-index: 1;
+}
+
+.island-food {
+  position: absolute;
+  left: 76%;
+  bottom: 30%;
+  transform: translate(-50%, 6px) scale(0.4);
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0;
+  z-index: 2;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.island-food.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.island-creature {
+  position: absolute;
+  left: 42%;
+  bottom: 28%;
+  z-index: 3;
+  transform: translateX(-50%);
+}
+
+.island-creature-body {
+  display: inline-block;
+  transform: scaleX(var(--face, 1));
+}
+
+.island-creature-emoji {
+  display: inline-block;
+  font-size: 1.85rem;
+  line-height: 1;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.4));
+  transform-origin: 50% 90%;
+}
+
+.island-creature.is-walking .island-creature-emoji {
+  animation: creature-walk 0.36s ease-in-out infinite;
+}
+
+.island-creature.is-eating .island-creature-emoji {
+  animation: creature-eat 0.5s ease-in-out infinite;
+}
+
+.island-creature.is-sleeping .island-creature-emoji {
+  transform: rotate(-78deg) translateY(2px);
+  animation: creature-snooze 2.6s ease-in-out infinite;
+}
+
+.island-zzz {
+  position: absolute;
+  left: 70%;
+  top: -0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.island-zzz sup {
+  font-size: 0.8em;
+}
+
+.island-creature.is-sleeping .island-zzz {
+  animation: creature-zzz 2.4s ease-in-out infinite;
+}
+
+/* Upright sleeper: float the zzz off the upper-right of the head. */
+.animal-island--img .island-creature.is-sleeping .island-zzz {
+  left: 72%;
+  top: -0.5rem;
+}
+
+/* —— Bespoke creature art (full-body SVG animals) —— */
+.island-creature.has-art {
+  bottom: 24%;
+}
+
+.creature-art {
+  display: block;
+  transform-origin: 50% 96%;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.32));
+}
+
+.creature-art [class*="peng-eye"],
+.creature-art [class*="peng-foot"] {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Penguin idle: gentle breathing bob */
+.penguin-art {
+  animation: peng-idle 3.4s ease-in-out infinite;
+}
+
+.island-creature.is-walking .penguin-art {
+  animation: peng-waddle 0.5s ease-in-out infinite;
+}
+
+.island-creature.is-walking .peng-feet .peng-foot-l {
+  animation: peng-step-l 0.5s ease-in-out infinite;
+}
+
+.island-creature.is-walking .peng-feet .peng-foot-r {
+  animation: peng-step-r 0.5s ease-in-out infinite;
+}
+
+.island-creature.is-eating .penguin-art {
+  transform-origin: 50% 100%;
+  animation: peng-peck 0.55s ease-in-out infinite;
+}
+
+.island-creature.is-sleeping .penguin-art {
+  animation: peng-sleep 3.4s ease-in-out infinite;
+}
+
+/* Closed eyes while sleeping */
+.island-creature.is-sleeping .peng-eye {
+  transform: scaleY(0.16);
+}
+
+.island-creature.is-sleeping .peng-glint {
+  opacity: 0;
+}
+
+@keyframes peng-idle {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-1px) scaleY(1.015);
+  }
+}
+
+@keyframes peng-waddle {
+  0% {
+    transform: rotate(-6deg) translateY(0);
+  }
+  25% {
+    transform: rotate(0deg) translateY(-2px);
+  }
+  50% {
+    transform: rotate(6deg) translateY(0);
+  }
+  75% {
+    transform: rotate(0deg) translateY(-2px);
+  }
+  100% {
+    transform: rotate(-6deg) translateY(0);
+  }
+}
+
+@keyframes peng-step-l {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px) translateX(-1px);
+  }
+}
+
+@keyframes peng-step-r {
+  0%,
+  100% {
+    transform: translateY(-3px) translateX(1px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes peng-peck {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(15deg) translateY(1px);
+  }
+}
+
+@keyframes peng-sleep {
+  0%,
+  100% {
+    transform: rotate(-4deg) translateY(0) scaleY(1);
+  }
+  50% {
+    transform: rotate(-4deg) translateY(1px) scaleY(0.98);
+  }
+}
+
+@keyframes creature-walk {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(4deg);
+  }
+}
+
+@keyframes creature-eat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(2px) rotate(8deg);
+  }
+}
+
+@keyframes creature-snooze {
+  0%,
+  100% {
+    transform: rotate(-78deg) translateY(2px) scale(1);
+  }
+  50% {
+    transform: rotate(-78deg) translateY(2px) scale(1.04);
+  }
+}
+
+@keyframes creature-zzz {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.7);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px) scale(1.1);
+  }
+}
+
+/* —— Per-animal habitats —— */
+.animal-island[data-habitat="iceberg"] {
+  --sky-top: #c4e8f5;
+  --sky-bottom: #8fc8e2;
+  --ground: #eef7fc;
+  --ground-2: #b9dcef;
+}
+.animal-island[data-habitat="forest"] {
+  --sky-top: #2f4a3a;
+  --sky-bottom: #3c5a47;
+  --ground: #3f7a4f;
+  --ground-2: #275436;
+}
+.animal-island[data-habitat="home"] {
+  --sky-top: #4c3b56;
+  --sky-bottom: #5e4b68;
+  --ground: #8a6248;
+  --ground-2: #5f4230;
+}
+.animal-island[data-habitat="yard"] {
+  --sky-top: #8ad0ee;
+  --sky-bottom: #bfe6f2;
+  --ground: #62b06a;
+  --ground-2: #3f8048;
+}
+.animal-island[data-habitat="bamboo"] {
+  --sky-top: #d2ebc6;
+  --sky-bottom: #aad79a;
+  --ground: #6fae5f;
+  --ground-2: #4d8540;
+}
+.animal-island[data-habitat="night"] {
+  --sky-top: #13173a;
+  --sky-bottom: #25204c;
+  --ground: #3a2f4c;
+  --ground-2: #241d33;
+}
+.animal-island[data-habitat="pond"] {
+  --sky-top: #c4e9c6;
+  --sky-bottom: #a2d8b3;
+  --ground: #4f97c6;
+  --ground-2: #2f6e9b;
+}
+.animal-island[data-habitat="woods"] {
+  --sky-top: #2a3b2e;
+  --sky-bottom: #3a4a38;
+  --ground: #6a5238;
+  --ground-2: #463320;
+}
+.animal-island[data-habitat="meadow"] {
+  --sky-top: #d2eef5;
+  --sky-bottom: #c4eccd;
+  --ground: #79c06a;
+  --ground-2: #559548;
+}
+.animal-island[data-habitat="savanna"] {
+  --sky-top: #f5cd7a;
+  --sky-bottom: #ec9f57;
+  --ground: #cda35c;
+  --ground-2: #a67d3c;
+}
+.animal-island[data-habitat="eucalyptus"] {
+  --sky-top: #d2e2da;
+  --sky-bottom: #b0ccbd;
+  --ground: #7f9070;
+  --ground-2: #5d6e4f;
+}
+.animal-island[data-habitat="jungle"] {
+  --sky-top: #244a32;
+  --sky-bottom: #346a44;
+  --ground: #3f7a4f;
+  --ground-2: #235235;
+}
+.animal-island[data-habitat="beach"] {
+  --sky-top: #c4e8f2;
+  --sky-bottom: #a2d8e8;
+  --ground: #ecd9a4;
+  --ground-2: #d3b878;
+}
+.animal-island[data-habitat="ocean"] {
+  --sky-top: #58a0c8;
+  --sky-bottom: #2f74a4;
+  --ground: #245f8c;
+  --ground-2: #18476b;
 }
 
 /* —— Quote gate —— */
@@ -471,14 +1154,23 @@ body.is-static .cursor-fx-picker {
   background: color-mix(in srgb, var(--panel-strong) 88%, transparent);
   backdrop-filter: blur(16px) saturate(1.35);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  display: grid;
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+  grid-template-areas:
+    "island nav right"
+    "hint hint hint";
+  align-items: center;
+  column-gap: 0.85rem;
 }
 
 .top-nav {
+  grid-area: nav;
   display: flex;
   flex-wrap: nowrap;
   justify-content: center;
   gap: 0.75rem;
   overflow-x: auto;
+  min-width: 0;
   padding: 0.1rem 0.15rem 0.25rem;
   scrollbar-width: none;
 }
@@ -488,6 +1180,7 @@ body.is-static .cursor-fx-picker {
 }
 
 .nav-hint {
+  grid-area: hint;
   text-align: center;
   margin: 0.35rem 0 0;
   font-size: 0.76rem;
@@ -1784,6 +2477,19 @@ footer {
   }
 }
 
+@media (max-width: 820px) {
+  .nav-wrap {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "nav"
+      "hint";
+  }
+
+  .animal-island {
+    display: none;
+  }
+}
+
 @media (max-width: 600px) {
   .nav-wrap {
     top: 0.35rem;
@@ -1821,8 +2527,17 @@ footer {
   .gallery-photo::after,
   .hero-avatar,
   .hero-title,
-  .hero-bio {
-    animation: none;
+  .hero-bio,
+  .island-creature-emoji,
+  .island-zzz,
+  .creature-art,
+  .penguin-art,
+  .peng-foot {
+    animation: none !important;
+  }
+
+  .island-creature {
+    transition: none !important;
   }
 
   #ambient-bg,

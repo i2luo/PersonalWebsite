@@ -21,3 +21,7 @@ venv/
 
 # Supabase CLI scratch output
 supabase/.temp/
+
+# Raw source renders for animal art (build-time input only; the site serves the
+# processed top-level PNGs produced by scripts/process_animal_art.py).
+assets/animals/_original/
