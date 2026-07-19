@@ -261,6 +261,10 @@
     }
   }
 
+  function getCursorFxToggleLabel(mode) {
+    return mode === "off" ? "set cursor fx" : "change cursor fx";
+  }
+
   function applyCursorFxMode(mode) {
     cursorFxMode = mode;
     document.body.classList.toggle("cursor-fx-off", mode === "off");
@@ -890,6 +894,10 @@
     animalBehavior = startAnimalBehavior(island);
   }
 
+  function getMoodToggleLabel(mood) {
+    return mood.animal || mood.color ? "change today's mood" : "set today's mood";
+  }
+
   function applyMood(mood) {
     applyMoodColor(mood.color);
     renderAnimalIsland(mood.animal);
@@ -952,6 +960,10 @@
         };
         applyMood(mood);
         writeMood(mood);
+        const moodToggle = document.querySelector(".mood-toggle");
+        if (moodToggle) {
+          moodToggle.textContent = getMoodToggleLabel(mood);
+        }
         close();
       });
 
@@ -959,6 +971,10 @@
         const cleared = { animal: null, color: null };
         applyMood(cleared);
         writeMood(cleared);
+        const moodToggle = document.querySelector(".mood-toggle");
+        if (moodToggle) {
+          moodToggle.textContent = getMoodToggleLabel(cleared);
+        }
         close();
       });
 
@@ -1003,10 +1019,10 @@
         ).join("")}
       </div>
       <button type="button" class="cursor-fx-toggle mood-toggle">
-        Today's Mood
+        ${getMoodToggleLabel(readMood())}
       </button>
       <button type="button" class="cursor-fx-toggle" aria-expanded="false" aria-controls="cursor-fx-menu">
-        Cursor FX
+        ${getCursorFxToggleLabel(cursorFxMode)}
       </button>
     `;
 
@@ -1026,6 +1042,7 @@
       button.addEventListener("click", () => {
         const mode = button.dataset.cursorFx;
         applyCursorFxMode(mode);
+        toggle.textContent = getCursorFxToggleLabel(mode);
         picker.querySelectorAll("[data-cursor-fx]").forEach((option) => {
           const active = option.dataset.cursorFx === mode;
           option.classList.toggle("is-active", active);

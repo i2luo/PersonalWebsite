@@ -57,8 +57,8 @@
               <div class="tldr-head">
                 <h2>Today's Tech TL;DR</h2>
                 <p class="tldr-note">
-                  One top Hacker News story each weekday, summarized and narrated in the
-                  voice of a random celebrity persona.
+                  One top Hacker News story each weekday, summarized via a prompt template sent to
+                  the Gemini API, then narrated by ElevenLabs in the voice of a random celebrity.
                 </p>
               </div>
               <div id="tldr-card" class="tldr-card" aria-live="polite">
@@ -122,7 +122,8 @@
             <div class="panel weather-panel">
               <h2>Current City Weather</h2>
               <p class="weather-note">
-                Live city weather from a secure Supabase-backed location updater.
+                Live city weather published from my MacBook's GPS location to a secure Supabase
+                backend. Refreshed hourly on the hour when the Mac is awake.
               </p>
               <div id="weather-card" class="weather-card" aria-live="polite">
                 <p id="weather-status" class="weather-status">Getting your location...</p>
