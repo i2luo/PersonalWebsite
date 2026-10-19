@@ -22,6 +22,18 @@
     [107, 159, 212],
     [156, 122, 200],
   ];
+  // Background scenes. "current" is the original blob mesh + CSS orbs drawn
+  // below; the rest are renderers from backgrounds.js mounted into #ambient-bg.
+  const BACKGROUND_STORAGE_KEY = "portfolio-background-v1";
+  const BACKGROUND_MODES = [
+    { id: "current", label: "Classic Mesh" },
+    { id: "fluid-mesh", label: "Fluid Mesh" },
+    { id: "aurora-shader", label: "Aurora Borealis" },
+    { id: "shooting-stars", label: "Shooting Stars" },
+    { id: "vanta-net", label: "Vanta Net" },
+  ];
+  const BACKGROUND_ACCENTS = { c1: "#8dc3a6", c2: "#6b9fd4", c3: "#9c7ac8" };
+  const PICKER_TOGGLE_LABEL = "change background/cursor fx";
   const MOOD_STORAGE_KEY = "portfolio-mood-v1";
   const DEFAULT_BG = "#091411";
   const MOOD_ANIMALS = [
@@ -92,6 +104,11 @@
   let rafId = 0;
   let cursorFxRafId = 0;
   let meshBaseColor = DEFAULT_BG;
+  let meshControls = null;
+  let backgroundMode = "current";
+  let backgroundHandle = null;
+  let backgroundMount = null;
+  let backgroundToken = 0;
   let animalBehavior = null;
   let cursorFxMode = "glow";
   let cursorFxCanvas = null;
@@ -156,6 +173,7 @@
     let width = 0;
     let height = 0;
     let start = performance.now();
+    let running = false;
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -169,6 +187,9 @@
     }
 
     function draw(now) {
+      if (!running) {
+        return;
+      }
       const t = (now - start) * 0.00015;
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = meshBaseColor;
@@ -198,8 +219,21 @@
 
     resize();
     window.addEventListener("resize", resize);
-    window.requestAnimationFrame(draw);
-    return resize;
+
+    // The loop is paused while a custom background from backgrounds.js is
+    // mounted, so the classic mesh doesn't render behind it for nothing.
+    return {
+      start() {
+        if (running) {
+          return;
+        }
+        running = true;
+        window.requestAnimationFrame(draw);
+      },
+      stop() {
+        running = false;
+      },
+    };
   }
 
   function initRevealObserver() {
@@ -259,10 +293,6 @@
     } catch {
       // Ignore storage errors.
     }
-  }
-
-  function getCursorFxToggleLabel(mode) {
-    return mode === "off" ? "set cursor fx" : "change cursor fx";
   }
 
   function applyCursorFxMode(mode) {
@@ -701,6 +731,116 @@
     const hex = color ? color.hex : DEFAULT_BG;
     meshBaseColor = hex;
     document.documentElement.style.setProperty("--bg-deep", hex);
+    if (backgroundHandle) {
+      backgroundHandle.setPalette(getBackgroundPalette());
+    }
+  }
+
+  /* —— Background scenes —— */
+
+  function getBackgroundPalette() {
+    return Object.assign({ bg: meshBaseColor }, BACKGROUND_ACCENTS);
+  }
+
+  function readBackgroundMode() {
+    try {
+      const stored = localStorage.getItem(BACKGROUND_STORAGE_KEY);
+      if (stored && BACKGROUND_MODES.some((mode) => mode.id === stored)) {
+        return stored;
+      }
+    } catch {
+      // Ignore storage errors.
+    }
+    return "current";
+  }
+
+  function writeBackgroundMode(mode) {
+    try {
+      localStorage.setItem(BACKGROUND_STORAGE_KEY, mode);
+    } catch {
+      // Ignore storage errors.
+    }
+  }
+
+  function updateBackgroundOptions(mode, loadingId) {
+    document.querySelectorAll("[data-background]").forEach((option) => {
+      const active = option.dataset.background === mode;
+      option.classList.toggle("is-active", active);
+      option.classList.toggle("is-loading", option.dataset.background === loadingId);
+      option.setAttribute("aria-checked", String(active));
+    });
+  }
+
+  function showClassicMesh() {
+    document.body.classList.remove("bg-custom");
+    if (meshControls) {
+      meshControls.start();
+    }
+  }
+
+  async function applyBackground(mode, { persist = true } = {}) {
+    const api = window.PortfolioBackgrounds;
+    if (!bg || (mode !== "current" && !api)) {
+      mode = "current";
+    }
+
+    backgroundMode = mode;
+    if (persist) {
+      writeBackgroundMode(mode);
+    }
+    backgroundToken += 1;
+    const token = backgroundToken;
+
+    if (backgroundHandle) {
+      backgroundHandle.destroy();
+      backgroundHandle = null;
+    }
+
+    if (mode === "current") {
+      showClassicMesh();
+      updateBackgroundOptions(mode, null);
+      return;
+    }
+
+    if (!backgroundMount) {
+      backgroundMount = document.createElement("div");
+      backgroundMount.id = "custom-bg";
+      backgroundMount.setAttribute("aria-hidden", "true");
+      bg.insertBefore(backgroundMount, bg.firstChild);
+    }
+    // Keep the classic mesh visible until the new scene is ready, so heavier
+    // scenes (Vanta loads three.js on first use) never leave a blank frame.
+    showClassicMesh();
+    updateBackgroundOptions(mode, mode);
+
+    try {
+      const handle = await api.mount(mode, backgroundMount, {
+        palette: getBackgroundPalette(),
+        reducedMotion: prefersReducedMotion,
+      });
+      if (token !== backgroundToken) {
+        handle.destroy();
+        return;
+      }
+      backgroundHandle = handle;
+      document.body.classList.add("bg-custom");
+      if (meshControls) {
+        meshControls.stop();
+      }
+      updateBackgroundOptions(mode, null);
+    } catch (error) {
+      console.warn(`Background "${mode}" failed to load; using the classic mesh.`, error);
+      if (token === backgroundToken) {
+        backgroundMode = "current";
+        showClassicMesh();
+        updateBackgroundOptions("current", null);
+      }
+    }
+  }
+
+  function initBackground() {
+    backgroundMode = readBackgroundMode();
+    applyBackground(backgroundMode, { persist: false });
   }
 
   function stopAnimalBehavior() {
@@ -1002,27 +1142,47 @@
     const picker = document.createElement("div");
     picker.className = "cursor-fx-picker";
     picker.innerHTML = `
-      <div class="cursor-fx-menu" role="menu" aria-label="Background cursor effects">
-        ${CURSOR_FX_MODES.map(
-          (mode) => `
-            <button
-              type="button"
-              class="cursor-fx-option${mode.id === cursorFxMode ? " is-active" : ""}"
-              data-cursor-fx="${mode.id}"
-              role="menuitemradio"
-              aria-checked="${mode.id === cursorFxMode}"
-            >
-              <span class="cursor-fx-swatch cursor-fx-swatch-${mode.id}" aria-hidden="true"></span>
-              <span>${mode.label}</span>
-            </button>
-          `
-        ).join("")}
+      <div class="cursor-fx-menu" role="menu" aria-label="Background and cursor effects">
+        <p class="cursor-fx-group-label" id="cursor-fx-group-background">Background</p>
+        <div class="cursor-fx-group" role="group" aria-labelledby="cursor-fx-group-background">
+          ${BACKGROUND_MODES.map(
+            (mode) => `
+              <button
+                type="button"
+                class="cursor-fx-option${mode.id === backgroundMode ? " is-active" : ""}"
+                data-background="${mode.id}"
+                role="menuitemradio"
+                aria-checked="${mode.id === backgroundMode}"
+              >
+                <span class="cursor-fx-swatch cursor-fx-swatch-bg-${mode.id}" aria-hidden="true"></span>
+                <span>${mode.label}</span>
+              </button>
+            `
+          ).join("")}
+        </div>
+        <p class="cursor-fx-group-label" id="cursor-fx-group-cursor">Cursor FX</p>
+        <div class="cursor-fx-group" role="group" aria-labelledby="cursor-fx-group-cursor">
+          ${CURSOR_FX_MODES.map(
+            (mode) => `
+              <button
+                type="button"
+                class="cursor-fx-option${mode.id === cursorFxMode ? " is-active" : ""}"
+                data-cursor-fx="${mode.id}"
+                role="menuitemradio"
+                aria-checked="${mode.id === cursorFxMode}"
+              >
+                <span class="cursor-fx-swatch cursor-fx-swatch-${mode.id}" aria-hidden="true"></span>
+                <span>${mode.label}</span>
+              </button>
+            `
+          ).join("")}
+        </div>
       </div>
       <button type="button" class="cursor-fx-toggle mood-toggle">
         ${getMoodToggleLabel(readMood())}
       </button>
       <button type="button" class="cursor-fx-toggle" aria-expanded="false" aria-controls="cursor-fx-menu">
-        ${getCursorFxToggleLabel(cursorFxMode)}
+        ${PICKER_TOGGLE_LABEL}
       </button>
     `;
 
@@ -1038,25 +1198,34 @@
       toggle.setAttribute("aria-expanded", String(isOpen));
     });
 
+    const closeMenu = () => {
+      picker.classList.remove("is-open");
+      toggle.setAttribute("aria-expanded", "false");
+    };
+
+    picker.querySelectorAll("[data-background]").forEach((button) => {
+      button.addEventListener("click", () => {
+        applyBackground(button.dataset.background);
+        closeMenu();
+      });
+    });
+
     picker.querySelectorAll("[data-cursor-fx]").forEach((button) => {
       button.addEventListener("click", () => {
         const mode = button.dataset.cursorFx;
         applyCursorFxMode(mode);
-        toggle.textContent = getCursorFxToggleLabel(mode);
         picker.querySelectorAll("[data-cursor-fx]").forEach((option) => {
           const active = option.dataset.cursorFx === mode;
           option.classList.toggle("is-active", active);
           option.setAttribute("aria-checked", String(active));
         });
-        picker.classList.remove("is-open");
-        toggle.setAttribute("aria-expanded", "false");
+        closeMenu();
       });
     });
 
     document.addEventListener("click", (event) => {
       if (!picker.contains(event.target)) {
-        picker.classList.remove("is-open");
-        toggle.setAttribute("aria-expanded", "false");
+        closeMenu();
       }
     });
 
@@ -1099,7 +1268,8 @@
   }
 
   initMood();
-  initMeshCanvas();
+  meshControls = initMeshCanvas();
+  initBackground();
   initRevealObserver();
   initScrollCue();
   initCursorFx();
