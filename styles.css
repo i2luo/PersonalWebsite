@@ -1587,6 +1587,10 @@ html.scrolled .scroll-cue {
   --span: 4;
 }
 
+.bento-card.row-span-2 {
+  grid-row: span 2;
+}
+
 .panel {
   height: 100%;
   background: var(--panel);
@@ -2076,6 +2080,96 @@ textarea {
   color: color-mix(in srgb, var(--accent-2) 70%, white 30%);
 }
 
+/* —— Latest workout —— */
+.workout-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.workout-note {
+  margin: 0.35rem 0 0.95rem;
+  color: var(--text-muted);
+}
+
+.workout-card {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(141, 195, 166, 0.14), transparent 60%),
+    rgba(12, 18, 22, 0.55);
+  padding: clamp(1rem, 2vw, 1.4rem);
+  min-height: 150px;
+}
+
+.workout-status {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.workout-status.is-error {
+  color: #fecaca;
+}
+
+.workout-date {
+  margin: 0 0 0.45rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.workout-title {
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  text-wrap: balance;
+}
+
+.workout-stats {
+  margin: 0.3rem 0 0;
+  font-size: 0.92rem;
+}
+
+.workout-exercises {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+}
+
+.workout-exercise {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.workout-exercise:last-child {
+  padding-bottom: 0;
+}
+
+.workout-exercise-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.workout-exercise-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.workout-exercise-count {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.workout-sets {
+  margin: 0.15rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
 .timezone-card {
   margin-top: 0.75rem;
   border: 1px solid rgba(141, 195, 166, 0.24);
@@ -2545,6 +2639,10 @@ footer {
   .bento-card.span-7,
   .bento-card.span-8 {
     --span: 12;
+  }
+
+  .bento-card.row-span-2 {
+    grid-row: auto;
   }
 
   .hero-banner {

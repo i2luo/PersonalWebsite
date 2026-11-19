@@ -105,6 +105,26 @@
             </div>
           </article>
 
+          <!-- Sits to the right of Technical Stack and Education, spanning both rows. -->
+          <article class="bento-card span-6 row-span-2 reveal">
+            <div class="panel workout-panel">
+              <h2>Latest Workout</h2>
+              <p class="workout-note">
+                My most recent gym session, pulled from Hevy once a day by an agent on my phone
+                and published to Supabase.
+              </p>
+              <div id="workout-card" class="workout-card" aria-live="polite">
+                <p id="workout-status" class="workout-status">Loading latest workout...</p>
+                <div id="workout-content" class="workout-content" hidden>
+                  <p id="workout-date" class="workout-date">--</p>
+                  <h3 id="workout-title" class="workout-title">--</h3>
+                  <p id="workout-stats" class="workout-stats">--</p>
+                  <ul id="workout-exercises" class="workout-exercises"></ul>
+                </div>
+              </div>
+            </div>
+          </article>
+
           <article class="bento-card span-6 reveal">
             <div class="panel">
               <h2>Education</h2>

@@ -366,6 +366,7 @@ const SUPABASE_ANON_KEY =
 const SUPABASE_WEATHER_TABLE = "portfolio_weather_current";
 const SUPABASE_STICKY_NOTES_TABLE = "portfolio_gallery_notes";
 const SUPABASE_TECH_TLDR_TABLE = "portfolio_tech_tldr";
+const SUPABASE_LATEST_WORKOUT_TABLE = "portfolio_latest_workout";
 const MAX_STICKY_NOTES = 60;
 const STICKY_REFRESH_MS = 12000;
 const STICKY_LEGACY_COLORS = new Set(["yellow", "blue", "pink", "mint"]);
@@ -789,6 +790,229 @@ function initTechTldr() {
 }
 
 initTechTldr();
+
+function selectWorkoutElements() {
+  return {
+    card: document.querySelector("#workout-card"),
+    status: document.querySelector("#workout-status"),
+    content: document.querySelector("#workout-content"),
+    date: document.querySelector("#workout-date"),
+    title: document.querySelector("#workout-title"),
+    stats: document.querySelector("#workout-stats"),
+    exercises: document.querySelector("#workout-exercises"),
+  };
+}
+
+function setWorkoutStatus(elements, message, isError = false) {
+  if (!elements.status) {
+    return;
+  }
+  elements.status.textContent = message;
+  elements.status.hidden = false;
+  elements.status.classList.toggle("is-error", isError);
+}
+
+function getLatestWorkoutRecordUrl() {
+  const columns = "title,started_at,ended_at,duration_min,exercise_count,exercises";
+  const query = `select=${columns}&id=eq.1&limit=1`;
+  const baseUrl = normalizeSupabaseUrl(SUPABASE_URL);
+  return `${baseUrl}/rest/v1/${SUPABASE_LATEST_WORKOUT_TABLE}?${query}`;
+}
+
+function isWorkoutNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function pluralize(count, noun) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+function formatWorkoutDate(record) {
+  const parsed = new Date(record.started_at || record.ended_at || "");
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+  return parsed.toLocaleDateString([], {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function formatWorkoutDuration(minutes) {
+  if (!isWorkoutNumber(minutes) || minutes <= 0) {
+    return "";
+  }
+  const hours = Math.floor(minutes / 60);
+  const rest = Math.round(minutes % 60);
+  if (!hours) {
+    return `${rest} min`;
+  }
+  return rest ? `${hours} h ${rest} min` : `${hours} h`;
+}
+
+function formatWorkoutAmount(value) {
+  return Number(value.toFixed(2)).toString();
+}
+
+function formatWorkoutSeconds(totalSeconds) {
+  const seconds = Math.round(totalSeconds);
+  if (seconds < 60) {
+    return `${seconds} s`;
+  }
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+const WORKOUT_SET_TYPE_LABELS = {
+  warmup: "warm-up",
+  dropset: "drop set",
+  failure: "to failure",
+};
+
+function formatWorkoutSet(set) {
+  const parts = [];
+  const weight = isWorkoutNumber(set.weight_lbs)
+    ? `${formatWorkoutAmount(set.weight_lbs)} lb`
+    : isWorkoutNumber(set.weight_kg)
+      ? `${formatWorkoutAmount(set.weight_kg)} kg`
+      : "";
+
+  if (weight && isWorkoutNumber(set.reps)) {
+    parts.push(`${weight} × ${set.reps}`);
+  } else if (weight) {
+    parts.push(weight);
+  } else if (isWorkoutNumber(set.reps)) {
+    parts.push(pluralize(set.reps, "rep"));
+  }
+  if (isWorkoutNumber(set.distance_km)) {
+    parts.push(`${formatWorkoutAmount(set.distance_km)} km`);
+  }
+  if (isWorkoutNumber(set.duration_seconds)) {
+    parts.push(formatWorkoutSeconds(set.duration_seconds));
+  }
+  if (!parts.length) {
+    return "";
+  }
+
+  const typeLabel = WORKOUT_SET_TYPE_LABELS[set.type];
+  return typeLabel ? `${parts.join(", ")} (${typeLabel})` : parts.join(", ");
+}
+
+function buildWorkoutExerciseItem(exercise) {
+  const sets = Array.isArray(exercise.sets) ? exercise.sets : [];
+
+  const item = document.createElement("li");
+  item.className = "workout-exercise";
+
+  const head = document.createElement("div");
+  head.className = "workout-exercise-head";
+
+  const name = document.createElement("span");
+  name.className = "workout-exercise-name";
+  name.textContent = exercise.name || "Unnamed exercise";
+  head.append(name);
+
+  if (sets.length) {
+    const count = document.createElement("span");
+    count.className = "workout-exercise-count";
+    count.textContent = pluralize(sets.length, "set");
+    head.append(count);
+  }
+  item.append(head);
+
+  const setLabels = sets
+    .map((set) => formatWorkoutSet(set && typeof set === "object" ? set : {}))
+    .filter(Boolean);
+  if (setLabels.length) {
+    const detail = document.createElement("p");
+    detail.className = "workout-sets";
+    detail.textContent = setLabels.join(" · ");
+    item.append(detail);
+  }
+
+  return item;
+}
+
+function renderLatestWorkout(elements, record) {
+  const exercises = (Array.isArray(record.exercises) ? record.exercises : []).filter(
+    (exercise) => exercise && typeof exercise === "object"
+  );
+  const exerciseCount = isWorkoutNumber(record.exercise_count)
+    ? record.exercise_count
+    : exercises.length;
+  const setCount = exercises.reduce(
+    (total, exercise) => total + (Array.isArray(exercise.sets) ? exercise.sets.length : 0),
+    0
+  );
+
+  if (elements.date) {
+    const dateLabel = formatWorkoutDate(record);
+    elements.date.textContent = dateLabel;
+    elements.date.hidden = !dateLabel;
+  }
+  if (elements.title) {
+    elements.title.textContent = record.title || "Workout";
+  }
+  if (elements.stats) {
+    const stats = [
+      formatWorkoutDuration(record.duration_min),
+      exerciseCount ? pluralize(exerciseCount, "exercise") : "",
+      setCount ? pluralize(setCount, "set") : "",
+    ].filter(Boolean);
+    elements.stats.textContent = stats.join(" · ");
+    elements.stats.hidden = !stats.length;
+  }
+  if (elements.exercises) {
+    elements.exercises.replaceChildren(...exercises.map(buildWorkoutExerciseItem));
+    elements.exercises.hidden = !exercises.length;
+  }
+
+  if (elements.status) {
+    elements.status.hidden = true;
+  }
+  if (elements.content) {
+    elements.content.hidden = false;
+  }
+}
+
+async function loadLatestWorkout(elements) {
+  if (!elements.card || !elements.status || !elements.content) {
+    return;
+  }
+
+  if (!supabaseConfigured()) {
+    setWorkoutStatus(
+      elements,
+      "Latest workout is not configured yet. Add your Supabase URL and anon key in weather-config.js.",
+      true
+    );
+    return;
+  }
+
+  setWorkoutStatus(elements, "Loading latest workout...");
+
+  try {
+    const rows = await fetchJson(getLatestWorkoutRecordUrl());
+    const record = Array.isArray(rows) ? rows[0] : null;
+    if (!record) {
+      setWorkoutStatus(elements, "No workout logged yet. Check back after my next session.");
+      return;
+    }
+    renderLatestWorkout(elements, record);
+  } catch {
+    setWorkoutStatus(elements, "Could not load the latest workout. Please try again later.", true);
+  }
+}
+
+function initLatestWorkout() {
+  const elements = selectWorkoutElements();
+  if (!elements.card) {
+    return;
+  }
+  loadLatestWorkout(elements);
+}
+
+initLatestWorkout();
 
 function selectStickyElements() {
   return {

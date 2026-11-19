@@ -1,0 +1,33 @@
+{
+  "title": "Push Day",
+  "started_at": "2026-11-18T16:02:00-05:00",
+  "ended_at": "2026-11-18T17:05:00-05:00",
+  "exercises": [
+    {
+      "name": "Bench Press (Barbell)",
+      "sets": [
+        { "type": "warmup", "reps": 10, "weight_kg": 60 },
+        { "type": "normal", "reps": 8, "weight_kg": 100, "rpe": 8 },
+        { "type": "normal", "reps": 8, "weight_kg": 100, "rpe": 9 }
+      ]
+    },
+    {
+      "name": "Shoulder Press (Dumbbell)",
+      "sets": [
+        { "type": "normal", "reps": 10, "weight_kg": 24 },
+        { "type": "failure", "reps": 7, "weight_kg": 24 }
+      ]
+    },
+    {
+      "name": "Triceps Dip",
+      "sets": [
+        { "type": "normal", "reps": 12 },
+        { "type": "normal", "reps": 10 }
+      ]
+    },
+    {
+      "name": "Plank",
+      "sets": [{ "type": "normal", "duration_seconds": 60 }]
+    }
+  ]
+}
