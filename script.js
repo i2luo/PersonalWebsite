@@ -367,6 +367,7 @@ const SUPABASE_WEATHER_TABLE = "portfolio_weather_current";
 const SUPABASE_STICKY_NOTES_TABLE = "portfolio_gallery_notes";
 const SUPABASE_TECH_TLDR_TABLE = "portfolio_tech_tldr";
 const SUPABASE_LATEST_WORKOUT_TABLE = "portfolio_latest_workout";
+const SUPABASE_DAILY_FOOD_PICK_RPC = "get_or_create_daily_food_pick";
 const MAX_STICKY_NOTES = 60;
 const STICKY_REFRESH_MS = 12000;
 const STICKY_LEGACY_COLORS = new Set(["yellow", "blue", "pink", "mint"]);
@@ -1013,6 +1014,187 @@ function initLatestWorkout() {
 }
 
 initLatestWorkout();
+
+function selectFoodElements() {
+  return {
+    section: document.querySelector("#food-section"),
+    card: document.querySelector("#food-card"),
+    status: document.querySelector("#food-status"),
+    content: document.querySelector("#food-content"),
+    image: document.querySelector("#food-image"),
+    made: document.querySelector("#food-made"),
+    caption: document.querySelector("#food-caption"),
+    dishes: document.querySelector("#food-dishes"),
+  };
+}
+
+function getDailyFoodPickUrl() {
+  const baseUrl = normalizeSupabaseUrl(SUPABASE_URL);
+  return `${baseUrl}/rest/v1/rpc/${SUPABASE_DAILY_FOOD_PICK_RPC}`;
+}
+
+// With nothing to show the whole card is removed, never left with a broken image.
+function collapseFoodSection(elements) {
+  elements.section.hidden = true;
+}
+
+function formatFoodMadeLabel(takenAt) {
+  const taken = new Date(takenAt || "");
+  if (Number.isNaN(taken.getTime())) {
+    return "";
+  }
+  // Whole calendar days in the visitor's timezone; rounding absorbs DST shifts.
+  const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const days = Math.max(0, Math.round((startOfDay(new Date()) - startOfDay(taken)) / 86400000));
+  const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+  if (days < 7) {
+    return `Made ${relative.format(-days, "day")}`;
+  }
+  if (days < 30) {
+    return `Made ${relative.format(-Math.floor(days / 7), "week")}`;
+  }
+  if (days < 365) {
+    return `Made ${relative.format(-Math.min(Math.floor(days / 30), 11), "month")}`;
+  }
+  return `Made ${relative.format(-Math.floor(days / 365), "year")}`;
+}
+
+function parseFoodRecipeUrl(value) {
+  try {
+    const url = new URL(typeof value === "string" ? value : "");
+    return url.protocol === "https:" || url.protocol === "http:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+// Stored as { items: [{ name, main, recipes: [{ title, url }] }] }, or null for a
+// photo whose dishes have not been identified. Anything malformed is skipped, and
+// only http(s) links are kept. The main dish comes first.
+function normalizeFoodDishes(dishes) {
+  const items = dishes && Array.isArray(dishes.items) ? dishes.items : [];
+  const normalized = [];
+
+  items.forEach((item) => {
+    const name = item && typeof item.name === "string" ? item.name.trim() : "";
+    if (!name) {
+      return;
+    }
+    const recipes = [];
+    (Array.isArray(item.recipes) ? item.recipes : []).forEach((recipe) => {
+      const url = parseFoodRecipeUrl(recipe && recipe.url);
+      if (!url) {
+        return;
+      }
+      const site = url.hostname.replace(/^www\./, "");
+      const title = typeof recipe.title === "string" ? recipe.title.trim() : "";
+      recipes.push({ title: title || site, site, href: url.href });
+    });
+    normalized.push({ name, main: item.main === true, recipes });
+  });
+
+  return [...normalized.filter((dish) => dish.main), ...normalized.filter((dish) => !dish.main)];
+}
+
+function createFoodDishItem(dish, showName) {
+  const item = document.createElement("li");
+  item.className = "food-dish";
+
+  if (showName) {
+    const name = document.createElement("p");
+    name.className = "food-dish-name";
+    name.textContent = dish.name;
+    item.append(name);
+  }
+
+  if (dish.recipes.length > 0) {
+    const recipes = document.createElement("ul");
+    recipes.className = "food-recipes";
+    dish.recipes.forEach((recipe) => {
+      const link = document.createElement("a");
+      link.className = "food-recipe-link";
+      link.href = recipe.href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = recipe.title;
+
+      const entry = document.createElement("li");
+      entry.append(link);
+      // A recipe without a title is already labelled with its site.
+      if (recipe.title !== recipe.site) {
+        const site = document.createElement("span");
+        site.className = "food-recipe-site";
+        site.textContent = recipe.site;
+        entry.append(" ", site);
+      }
+      recipes.append(entry);
+    });
+    item.append(recipes);
+  }
+
+  return item;
+}
+
+function renderDailyFoodPick(elements, record) {
+  const caption = typeof record.caption === "string" ? record.caption.trim() : "";
+  const dishes = normalizeFoodDishes(record.dishes);
+  // The heading is the caption, which for a photo with dishes is its main dish.
+  const heading = caption || (dishes.length > 0 ? dishes[0].name : "");
+  const madeLabel = formatFoodMadeLabel(record.taken_at);
+
+  elements.image.alt = heading || "A dish I made recently";
+  elements.image.addEventListener("error", () => collapseFoodSection(elements), { once: true });
+  elements.image.src = record.public_url;
+
+  elements.made.textContent = madeLabel;
+  elements.made.hidden = !madeLabel;
+  elements.caption.textContent = heading;
+  elements.caption.hidden = !heading;
+
+  // The first dish's name is not repeated when the heading already shows it.
+  const dishItems = dishes
+    .map((dish, index) => {
+      const showName = index > 0 || dish.name.toLowerCase() !== heading.toLowerCase();
+      return showName || dish.recipes.length > 0 ? createFoodDishItem(dish, showName) : null;
+    })
+    .filter(Boolean);
+  elements.dishes.replaceChildren(...dishItems);
+  elements.dishes.hidden = dishItems.length === 0;
+
+  elements.status.hidden = true;
+  elements.content.hidden = false;
+}
+
+async function loadDailyFoodPick(elements) {
+  if (!supabaseConfigured()) {
+    collapseFoodSection(elements);
+    return;
+  }
+
+  try {
+    // The first call of the day picks and locks the dish; later calls return the same one.
+    const rows = await postJson(getDailyFoodPickUrl(), {});
+    const record = Array.isArray(rows) ? rows[0] : null;
+    if (!record || !record.public_url) {
+      collapseFoodSection(elements);
+      return;
+    }
+    renderDailyFoodPick(elements, record);
+  } catch {
+    collapseFoodSection(elements);
+  }
+}
+
+function initDailyFoodPick() {
+  const elements = selectFoodElements();
+  if (Object.values(elements).some((element) => !element)) {
+    return;
+  }
+  loadDailyFoodPick(elements);
+}
+
+initDailyFoodPick();
 
 function selectStickyElements() {
   return {

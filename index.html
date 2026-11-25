@@ -139,6 +139,30 @@
             </div>
           </article>
 
+          <!-- script.js hides this whole card when there is no dish to show. -->
+          <article id="food-section" class="bento-card span-12 reveal">
+            <div class="panel food-panel">
+              <h2>Something that I made recently:</h2>
+              <p class="food-note">
+                One dish a day from the Food album on my phone, synced to Supabase by an agent and
+                picked with a bias toward what I cooked most recently.
+              </p>
+              <div id="food-card" class="food-card" aria-live="polite">
+                <p id="food-status" class="food-status">Loading today's dish...</p>
+                <figure id="food-content" class="food-content" hidden>
+                  <div class="food-photo">
+                    <img id="food-image" class="food-image" alt="" loading="lazy" decoding="async" />
+                  </div>
+                  <figcaption class="food-details">
+                    <p id="food-made" class="food-made">--</p>
+                    <h3 id="food-caption" class="food-caption">--</h3>
+                    <ul id="food-dishes" class="food-dishes" hidden></ul>
+                  </figcaption>
+                </figure>
+              </div>
+            </div>
+          </article>
+
           <article class="bento-card span-12 reveal">
             <div class="panel weather-panel">
               <h2>Current City Weather</h2>
