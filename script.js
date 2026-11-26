@@ -321,6 +321,44 @@ function buildTopNav() {
 
 buildTopNav();
 
+// The nav shrinks on scroll while keeping the same footprint in the page, and styles.css
+// needs the hint's full height to do that. It is measured here because the hint wraps onto
+// a second line on narrow screens.
+function trackNavHintHeight() {
+  const hint = document.querySelector(".nav-wrap .nav-hint");
+  if (!hint) {
+    return;
+  }
+
+  const navWrap = hint.closest(".nav-wrap");
+  let lastHeight = "";
+  const sync = () => {
+    const lineHeight = parseFloat(getComputedStyle(hint).lineHeight);
+    if (!lineHeight) {
+      return;
+    }
+    // scrollHeight is rounded and still reports the full text while the hint is collapsed,
+    // so count lines from it and rebuild the exact height.
+    const lines = Math.max(1, Math.round(hint.scrollHeight / lineHeight));
+    const height = `${lines * lineHeight}px`;
+    if (height !== lastHeight) {
+      lastHeight = height;
+      navWrap.style.setProperty("--nav-hint-height", height);
+    }
+  };
+
+  sync();
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(sync).observe(hint);
+  } else {
+    window.addEventListener("resize", sync);
+  }
+  // A late web font can change where the hint wraps without changing its width.
+  document.fonts?.ready.then(sync);
+}
+
+trackNavHintHeight();
+
 function weatherLabelFromCode(code) {
   const labels = {
     0: "Clear sky",

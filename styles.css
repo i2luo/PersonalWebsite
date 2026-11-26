@@ -1226,12 +1226,32 @@ body.is-static .cursor-fx-picker {
   z-index: 1;
 }
 
+/* Registered as a number so it can be transitioned; every size that changes when the nav
+   shrinks is derived from it, which keeps them all in step. */
+@property --nav-compact {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 .nav-wrap {
+  /* 0 at the top of the page, 1 once the page has scrolled. */
+  --nav-compact: 0;
+  --card-w: 96px;
+  --card-h: 136px;
+  --card-shrink: 0.4;
+  --card-scale: calc(1 - var(--card-shrink) * var(--nav-compact));
   position: sticky;
   top: 0.75rem;
   z-index: 20;
-  margin-bottom: 0.5rem;
-  padding: 0.65rem 0.85rem;
+  /* Grows by exactly what the cards, padding and hint give up, so the nav keeps the same
+     footprint in the page and shrinking it never moves the content underneath. */
+  margin-bottom: calc(
+    0.5rem + var(--nav-compact) *
+      (var(--card-shrink) * var(--card-h) + 0.5rem + 0.35rem + var(--nav-hint-height, 1.292rem))
+  );
+  padding: calc(0.65rem - 0.25rem * var(--nav-compact)) 0.85rem;
+  transition: --nav-compact 320ms cubic-bezier(0.23, 1, 0.32, 1);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--panel-strong) 88%, transparent);
@@ -1246,12 +1266,16 @@ body.is-static .cursor-fx-picker {
   column-gap: 0.85rem;
 }
 
+html.scrolled .nav-wrap {
+  --nav-compact: 1;
+}
+
 .top-nav {
   grid-area: nav;
   display: flex;
   flex-wrap: nowrap;
   justify-content: center;
-  gap: 0.75rem;
+  gap: calc(0.75rem - 0.3rem * var(--nav-compact));
   overflow-x: auto;
   min-width: 0;
   padding: 0.1rem 0.15rem 0.25rem;
@@ -1265,10 +1289,14 @@ body.is-static .cursor-fx-picker {
 .nav-hint {
   grid-area: hint;
   text-align: center;
-  margin: 0.35rem 0 0;
+  margin: calc(0.35rem * (1 - var(--nav-compact))) 0 0;
   font-size: 0.76rem;
   color: var(--text-muted);
   letter-spacing: 0.04em;
+  /* --nav-hint-height is measured by script.js, since the hint can wrap on narrow screens. */
+  max-height: calc(var(--nav-hint-height, 1.292rem) * (1 - var(--nav-compact)));
+  overflow: hidden;
+  opacity: calc(1 - var(--nav-compact));
 }
 
 /* —— Playing card tabs —— */
@@ -1278,8 +1306,13 @@ body.is-static .cursor-fx-picker {
   background: transparent;
   cursor: pointer;
   position: relative;
-  width: 96px;
-  height: 136px;
+  width: var(--card-w);
+  height: var(--card-h);
+  /* Shrinks about its centre; the negative margins pull the layout box in by the same
+     amount so the row and the gaps between cards shrink with it. */
+  scale: var(--card-scale);
+  margin: calc(var(--card-h) * (var(--card-scale) - 1) / 2)
+    calc(var(--card-w) * (var(--card-scale) - 1) / 2);
   border-radius: 14px;
   perspective: 1000px;
   flex: 0 0 auto;
@@ -2796,13 +2829,10 @@ footer {
 
 @media (max-width: 600px) {
   .nav-wrap {
+    --card-w: 84px;
+    --card-h: 120px;
     top: 0.35rem;
     border-radius: var(--radius-md);
-  }
-
-  .card-tab {
-    width: 84px;
-    height: 120px;
   }
 
   .page-hero {
@@ -2846,6 +2876,10 @@ footer {
 
   .island-creature {
     transition: none !important;
+  }
+
+  .nav-wrap {
+    transition: none;
   }
 
   #ambient-bg,
