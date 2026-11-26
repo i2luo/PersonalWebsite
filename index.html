@@ -86,60 +86,8 @@
             </div>
           </article>
 
-          <article class="bento-card span-6 reveal">
-            <div class="panel">
-              <h2>Technical Stack</h2>
-              <div class="stack-list">
-                <span class="pill">JavaScript</span>
-                <span class="pill">TypeScript</span>
-                <span class="pill">Python</span>
-                <span class="pill">C# / C++</span>
-                <span class="pill">React</span>
-                <span class="pill">Node.js</span>
-                <span class="pill">PostgreSQL</span>
-                <span class="pill">Docker</span>
-                <span class="pill">Jest</span>
-                <span class="pill">TensorFlow</span>
-                <span class="pill">Tailwind CSS</span>
-              </div>
-            </div>
-          </article>
-
-          <!-- Sits to the right of Technical Stack and Education, spanning both rows. -->
-          <article class="bento-card span-6 row-span-2 reveal">
-            <div class="panel workout-panel">
-              <h2>Latest Workout</h2>
-              <p class="workout-note">
-                My most recent gym session, pulled from Hevy once a day by an agent on my phone
-                and published to Supabase.
-              </p>
-              <div id="workout-card" class="workout-card" aria-live="polite">
-                <p id="workout-status" class="workout-status">Loading latest workout...</p>
-                <div id="workout-content" class="workout-content" hidden>
-                  <p id="workout-date" class="workout-date">--</p>
-                  <h3 id="workout-title" class="workout-title">--</h3>
-                  <p id="workout-stats" class="workout-stats">--</p>
-                  <ul id="workout-exercises" class="workout-exercises"></ul>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="bento-card span-6 reveal">
-            <div class="panel">
-              <h2>Education</h2>
-              <p>
-                <strong>University of Waterloo</strong><br />
-                Bachelor of Science in Computer Science, Co-op Program (2023 - 2028)
-              </p>
-              <ul class="list-clean">
-                <li>President's Scholarship of Distinction ($5000)</li>
-                <li>Placed first in BC for the 2021 Euclid Math Contest (team)</li>
-              </ul>
-            </div>
-          </article>
-
-          <!-- script.js hides this whole card when there is no dish to show. -->
+          <!-- Full width, so the grid stays intact when script.js hides this card because there
+               is no dish to show. -->
           <article id="food-section" class="bento-card span-12 reveal">
             <div class="panel food-panel">
               <h2>Something that I made recently:</h2>
@@ -163,7 +111,27 @@
             </div>
           </article>
 
-          <article class="bento-card span-12 reveal">
+          <!-- Workout and weather share a row; the workout gets the wider column for its set list. -->
+          <article class="bento-card span-7 reveal">
+            <div class="panel workout-panel">
+              <h2>Latest Workout</h2>
+              <p class="workout-note">
+                My most recent gym session, pulled from Hevy once a day by an agent on my phone
+                and published to Supabase.
+              </p>
+              <div id="workout-card" class="workout-card" aria-live="polite">
+                <p id="workout-status" class="workout-status">Loading latest workout...</p>
+                <div id="workout-content" class="workout-content" hidden>
+                  <p id="workout-date" class="workout-date">--</p>
+                  <h3 id="workout-title" class="workout-title">--</h3>
+                  <p id="workout-stats" class="workout-stats">--</p>
+                  <ul id="workout-exercises" class="workout-exercises"></ul>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="bento-card span-5 reveal">
             <div class="panel weather-panel">
               <h2>Current City Weather</h2>
               <p class="weather-note">
@@ -183,11 +151,11 @@
                   <p class="weather-meta">Updated: <span id="weather-updated">--</span></p>
                 </div>
               </div>
-            <div class="timezone-card" aria-live="polite">
-              <p class="weather-meta timezone-label">Current Time (Mac Timezone)</p>
-              <p id="timezone-time" class="timezone-time">--:--</p>
-              <p id="timezone-name" class="weather-meta timezone-name">Timezone unavailable</p>
-            </div>
+              <div class="timezone-card" aria-live="polite">
+                <p class="weather-meta timezone-label">Current Time (Mac Timezone)</p>
+                <p id="timezone-time" class="timezone-time">--:--</p>
+                <p id="timezone-name" class="weather-meta timezone-name">Timezone unavailable</p>
+              </div>
               <button id="weather-refresh" class="btn weather-btn" type="button">Refresh Weather</button>
             </div>
           </article>

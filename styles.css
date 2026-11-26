@@ -1587,10 +1587,6 @@ html.scrolled .scroll-cue {
   --span: 4;
 }
 
-.bento-card.row-span-2 {
-  grid-row: span 2;
-}
-
 .panel {
   height: 100%;
   background: var(--panel);
@@ -1664,8 +1660,7 @@ p {
   margin-bottom: 0.5rem;
 }
 
-.tag-list,
-.stack-list {
+.tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -1906,6 +1901,8 @@ textarea {
 }
 
 .weather-card {
+  /* Absorbs the spare height when the workout card beside it is the taller one. */
+  flex: 1;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: rgba(12, 18, 22, 0.55);
@@ -2769,10 +2766,6 @@ footer {
   .bento-card.span-7,
   .bento-card.span-8 {
     --span: 12;
-  }
-
-  .bento-card.row-span-2 {
-    grid-row: auto;
   }
 
   .hero-banner {
